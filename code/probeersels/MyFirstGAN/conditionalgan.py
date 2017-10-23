@@ -139,22 +139,22 @@ def generator(z_len, type_of_data, gopt, conditionalvars=0) :
         elif type_of_data == 'mnist':
             hidden = Reshape((1,1) + hidden._keras_shape[1:])(hidden)
 
-            hidden = Conv2DTranspose(256, 4, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2DTranspose(1024, 4, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
+            hidden = BatchNormalization()(hidden)
+            hidden = PReLU()(hidden)
+
+            hidden = UpSampling2D(2)(hidden)
+            hidden = Conv2D(512, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
+            hidden = BatchNormalization()(hidden)
+            hidden = PReLU()(hidden)
+
+            hidden = UpSampling2D(2)(hidden)
+            hidden = Conv2D(256, 3, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
             hidden = BatchNormalization()(hidden)
             hidden = PReLU()(hidden)
 
             hidden = UpSampling2D(2)(hidden)
             hidden = Conv2D(128, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
-            hidden = BatchNormalization()(hidden)
-            hidden = PReLU()(hidden)
-
-            hidden = UpSampling2D(2)(hidden)
-            hidden = Conv2D(64, 3, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
-            hidden = BatchNormalization()(hidden)
-            hidden = PReLU()(hidden)
-
-            hidden = UpSampling2D(2)(hidden)
-            hidden = Conv2D(32, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
             hidden = BatchNormalization()(hidden)
             hidden = PReLU()(hidden)
 
@@ -184,13 +184,11 @@ def generator(z_len, type_of_data, gopt, conditionalvars=0) :
 def discriminator(inpshape, type_of_data, dopt, conditionalvars=0) :
     def feature_extractor(hidden, type_of_data):
         if type_of_data == 'mnist':
-            km = 3 #kernel multiple
-
-            hidden = Conv2D(2*km, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(20, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
             hidden = MaxPooling2D(2)(hidden)
-            hidden = Conv2D(5*km, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(50, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
             hidden = MaxPooling2D(2)(hidden)
-            hidden = Conv2D(50*km, 4, strides=1, kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(500, 4, strides=1, kernel_initializer='glorot_uniform')(hidden)
             hidden = PReLU()(hidden)
             return Flatten()(hidden)
 
