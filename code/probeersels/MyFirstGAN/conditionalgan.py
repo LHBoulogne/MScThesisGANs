@@ -251,7 +251,7 @@ def buildGAN(z_len, type_of_data, conditionalvars=0):
 ##### Training #####
 ####################
 
-def trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batches, c_train=None, plot_step=3):
+def trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batches, c_train=None, plot_step=200):
     if not c_train is None:
         categories = c_train.shape[1]
     else:
