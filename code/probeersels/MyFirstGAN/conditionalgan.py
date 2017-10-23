@@ -5,7 +5,7 @@ from keras.models import Model
 from keras.layers.core import Dense, Activation
 from keras.layers import Input, merge, Conv2DTranspose, ZeroPadding2D, BatchNormalization, PReLU, Reshape, Conv2D, MaxPooling2D, UpSampling2D, Flatten
 from keras import optimizers
-from termcolor import colored
+#from termcolor import colored
 
 ################
 ##### Data #####
@@ -25,9 +25,9 @@ def get_data(type_of_data, n=3, size=(10000, 10000)):
 def MNIST_data(size) :
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     if size[0] > x_train.shape[0]:
-        print(colored('WARNING: requested ' + str(size[0]) + ' train samples for MNIST data, but only '+ str(x_train.shape[0]) +' available.','yellow'))
+        print('\033[93mWARNING: requested ' + str(size[0]) + ' train samples for MNIST data, but only '+ str(x_train.shape[0]) +' available.')
     if size[1] > x_test.shape[0]:
-        print(colored('WARNING: requested ' + str(size[1]) + ' test samples for MNIST data, but only '+ str(x_test.shape[0]) +' available.','yellow'))
+        print('\033[93mWARNING: requested ' + str(size[1]) + ' test samples for MNIST data, but only '+ str(x_test.shape[0]) +' available.')
 
     y_train = to_one_hot(y_train[:size[0]])
     y_test  = to_one_hot(y_test[:size[1]])
