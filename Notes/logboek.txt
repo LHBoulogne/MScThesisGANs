@@ -1,0 +1,8 @@
+4-9
+9:00  - 11:00
+Literatuur zoeken en afdrukken
+
+11-9
+11:00 - 13:00
+Learning: "StackGAN: Text to Photo-realistic Image Synthesis with Stacked Generative Aversarial Networks" - H. Zhang et al.
+
