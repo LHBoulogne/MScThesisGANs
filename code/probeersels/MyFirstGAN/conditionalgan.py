@@ -32,8 +32,8 @@ def MNIST_data(size) :
     y_train = to_one_hot(y_train[:size[0]])
     y_test  = to_one_hot(y_test[:size[1]])
 
-    x_train = x_train.reshape(x_train.shape + (1,))
-    x_test = x_test.reshape(x_test.shape + (1,))
+    x_train = x_train.reshape(x_train.shape + (1,))/255.0
+    x_test = x_test.reshape(x_test.shape + (1,))/255.0
 
     return x_train[:size[0]], y_train, x_test[:size[1]], y_test
 
@@ -130,7 +130,6 @@ def generator(z_len, type_of_data, gopt, conditionalvars=0) :
             hidden = BatchNormalization()(hidden)
             hidden = PReLU()(hidden)
             print(hidden._keras_shape[1:])
-            quit()
 
             hidden = Conv2DTranspose(1, 6, strides=1)(hidden)
             return Activation('sigmoid')(hidden)
@@ -293,7 +292,6 @@ def trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batc
         if categories: #for conditional input
             c_fake = to_one_hot(np.random.randint(categories, size=(mini_batch_size,)))
             z = [z, c_fake] 
-
         GAN.train_on_batch(z, y_real)
 
     print("Batch " + str(it+1) + "/" + str(nr_batches))
