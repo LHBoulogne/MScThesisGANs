@@ -139,22 +139,23 @@ def generator(z_len, type_of_data, gopt, conditionalvars=0) :
         elif type_of_data == 'mnist':
             hidden = Reshape((1,1) + hidden._keras_shape[1:])(hidden)
 
-            hidden = Conv2DTranspose(1024, 4, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
+            m = 2
+            hidden = Conv2DTranspose(128*m, 4, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
             hidden = BatchNormalization()(hidden)
             hidden = PReLU()(hidden)
 
             hidden = UpSampling2D(2)(hidden)
-            hidden = Conv2D(512, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(64*m, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
             hidden = BatchNormalization()(hidden)
             hidden = PReLU()(hidden)
 
             hidden = UpSampling2D(2)(hidden)
-            hidden = Conv2D(256, 3, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(32*m, 3, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
             hidden = BatchNormalization()(hidden)
             hidden = PReLU()(hidden)
 
             hidden = UpSampling2D(2)(hidden)
-            hidden = Conv2D(128, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(16*m, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
             hidden = BatchNormalization()(hidden)
             hidden = PReLU()(hidden)
 
@@ -183,12 +184,13 @@ def generator(z_len, type_of_data, gopt, conditionalvars=0) :
 
 def discriminator(inpshape, type_of_data, dopt, conditionalvars=0) :
     def feature_extractor(hidden, type_of_data):
+        m = 2
         if type_of_data == 'mnist':
-            hidden = Conv2D(20, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(2*m, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
             hidden = MaxPooling2D(2)(hidden)
-            hidden = Conv2D(50, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(5*m, 5, strides=1, kernel_initializer='glorot_uniform')(hidden)
             hidden = MaxPooling2D(2)(hidden)
-            hidden = Conv2D(500, 4, strides=1, kernel_initializer='glorot_uniform')(hidden)
+            hidden = Conv2D(50*m, 4, strides=1, kernel_initializer='glorot_uniform')(hidden)
             hidden = PReLU()(hidden)
             return Flatten()(hidden)
 
@@ -249,7 +251,7 @@ def buildGAN(z_len, type_of_data, conditionalvars=0):
 ##### Training #####
 ####################
 
-def trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batches, c_train=None, plot_step=200):
+def trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batches, c_train=None, plot_step=10):
     if not c_train is None:
         categories = c_train.shape[1]
     else:
@@ -258,8 +260,8 @@ def trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batc
     print("Starting training:")
 
     for it in range(nr_batches):
-        if it%plot_step == 0 :
-            plot(real, noise, G, categories)
+        if plot_step!=0 and (it%plot_step == 0 or it+1 == nr_batches):
+            plot(real, noise, G, it, categories)
 
         print("\rBatch " + str(it+1) + "/" + str(nr_batches), end='\r')
         
@@ -301,41 +303,56 @@ def trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batc
 ##### Plotting #####
 ####################
 
-def plot(real, noise, G, categories=0) :
-        plt.figure(1)
+def plot(real, noise, G, iteration, categories=0, savefolder='train_images', save=True, plot=False) :
+        if not plot and not save:
+            pass
+
+
         if categories == 0:
             fake = G.predict(noise)
         else :
             fake = G.predict([noise, to_one_hot(np.arange(len(noise))%categories)])
         
-        plt.gcf().clear()
-        if len(fake.shape) == 4:
-            x = y = 4 
-            xdim = ydim = 28
-            image = np.zeros((4*28, 4*28))
+        images = len(fake.shape) == 4
+
+        if images:
+            xdim = fake.shape[1] 
+            ydim = fake.shape[2]
+
+            x = y = int(np.sqrt(fake.shape[0]))
+            image = np.zeros((x*xdim, y*ydim))
             for ity in range(x):
                 for itx in range(y):
                     xstart = itx*xdim
                     ystart = ity*ydim
                     image[xstart:xstart+xdim,ystart:ystart+ydim] = fake[itx+x*ity,:,:,0]
-            plt.imshow(image, cmap='gray')
+        
+        if save and images:
+            np.save(savefolder + '/' + str(iteration), image)
 
-        else:
-            plt.scatter(real[:,0], real[:,1], color='r')
-            plt.scatter(fake[:,0], fake[:,1], color='b')
-            
-            axes = plt.gca()
+        if plot:
+            plt.figure(1)
+            plt.gcf().clear()
+            if images:
+                plt.imshow(image, cmap='gray')
+                plt.title('Iteration ' + str(iteration))
+                
+            else:
+                plt.scatter(real[:,0], real[:,1], color='r')
+                plt.scatter(fake[:,0], fake[:,1], color='b')
+                
+                axes = plt.gca()
 
-            minx = np.min(real[:,0])-1
-            maxx = np.max(real[:,0])+1
-            miny = np.min(real[:,1])-1
-            maxy = np.max(real[:,1])+1
+                minx = np.min(real[:,0])-1
+                maxx = np.max(real[:,0])+1
+                miny = np.min(real[:,1])-1
+                maxy = np.max(real[:,1])+1
 
-            axes.set_xlim([minx, maxx])
-            axes.set_ylim([miny, maxy])
+                axes.set_xlim([minx, maxx])
+                axes.set_ylim([miny, maxy])
 
-        plt.draw()
-        plt.pause(0.00001)
+            plt.draw()
+            plt.pause(0.00001)
 
 ################
 ##### Main #####
@@ -371,9 +388,8 @@ def main() :
     noise = sample_noise(plot_size, z_len)
     plt.ion()
 
-    (G, D, GAN) = trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batches, c_train=c_train)
+    (G, D, GAN) = trainGAN(x_train, real, noise, G, D, GAN, z_len, mini_batch_size, k, nr_batches, c_train=c_train, plot_step=10)
 
-    plot(real, noise, G, categories)
     plt.ioff()
     plt.show()
 
