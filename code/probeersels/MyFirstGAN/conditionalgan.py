@@ -366,7 +366,7 @@ def main() :
     categories = 10 #only for gaussians
     data_size = (60000, 10000)
 
-    z_len = 20
+    z_len = 100
 
     ###
     if type_of_data == 'lisajou' : 
