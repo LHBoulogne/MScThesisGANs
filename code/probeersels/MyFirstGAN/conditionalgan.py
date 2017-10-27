@@ -74,9 +74,10 @@ def sample_data(batch_size, x_train) :
     return (x_train[rands], rands)
 
 def sample_noise(batch_size, dim) :
-    mean = np.zeros(dim)
-    cov = np.identity(dim)
-    rands = np.random.multivariate_normal(mean, cov, batch_size)
+    #mean = np.zeros(dim)
+    #cov = np.identity(dim)
+    #rands = np.random.multivariate_normal(mean, cov, batch_size)
+    rands = np.random.uniform(-1, 1, (batch_size, 100))
     return rands
 
 
