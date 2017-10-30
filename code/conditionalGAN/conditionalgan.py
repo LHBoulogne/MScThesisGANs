@@ -1,6 +1,7 @@
 import numpy as np 
+import os
 
-from keras.models import Model
+from keras.models import Model, Sequential, load_model
 from keras.layers.core import Dense, Activation
 from keras.layers import Input, merge, Conv2DTranspose, ZeroPadding2D, BatchNormalization, PReLU, LeakyReLU, Reshape, Conv2D, MaxPooling2D, UpSampling2D, Flatten
 from keras import optimizers
@@ -8,24 +9,29 @@ from keras import optimizers
 
 class GAN() : 
     #opts: (gen opt, disc opt)
-    def __init__(self, data_shape, categories=0, z_len=100, generator=None, discriminator=None):
+    def __init__(self, data_shape, categories=0, z_len=100, g_option=1, d_option=1, optimizer_str='SGD', loadfolder=None):
         self.z_len = z_len
         self.data_shape = data_shape
         self.categories = categories
-        self.reinitialize(generator, discriminator)
-
-    def reinitialize(self, G, D):
+        self.reinitialize(g_option, d_option, optimizer_str, loadfolder)
+        
+    def reinitialize(self, g_option, d_option, optimizer_str, loadfolder):
         #Only init G and D if they are not specified
-        if G is None:
-            gopt = optimizers.Adam(lr=0.0002)
-            G = self.generator(gopt)
+        if loadfolder is None:
+            if optimizer_str == 'SGD':
+                gopt = dopt = optimizers.SGD(lr=0.0002, momentum=0.9, nesterov=True)
+            elif optimizer_str == "Adam":
+                gopt = dopt = optimizers.Adam(lr=0.0001, beta_1=0.5)
+            else : 
+                raise RuntimeError("Incorrect optimizer string: " + optimizer_str)
+
+            G = self.generator(gopt, g_option)
+            D = self.discriminator(dopt, d_option)
+        
         else :
+            (G, D) = self.load(loadfolder)
             gopt = G.optimizer
-
-        if D is None:
-            dopt = optimizers.Adam(lr=0.0002)
-            D = self.discriminator(dopt)
-
+        
         #Freeze weights in discriminator
         for layer in D.layers:
             layer.trainable = False
@@ -48,6 +54,16 @@ class GAN() :
         self.D = D
         self.GAN = GAN
 
+
+    def load(self, loadfolder) :
+        G = load_model(os.path.join(loadfolder, 'generator.h5'))
+        D = load_model(os.path.join(loadfolder, 'discriminator.h5'))
+        return (G, D)
+
+    def save(self, savefolder) :
+        self.G.save(os.path.join(savefolder, 'generator.h5'))
+        self.D.save(os.path.join(savefolder, 'discriminator.h5'))
+
     ####################
     ##### Building #####
     ####################
@@ -57,7 +73,7 @@ class GAN() :
 
     # MNIST architecture partially from https://github.com/mingyuliutw/CoGAN_PyTorch/blob/master/src/net_gan_mnist.py
     # Due to limited padding options, the architecture has been changed.
-    def generator(self, gopt) :
+    def generator(self, gopt, option) :
         def conditional_layer(inp, c_inp=None):
             if self.categories > 0:
                 if c_inp == None:
@@ -69,42 +85,16 @@ class GAN() :
 
             return (inp, hidden)
         
-        def layers(hidden):
-            if self.data_shape == (28,28,1): #MNIST
-                hidden = Reshape((1,1) + hidden._keras_shape[1:])(hidden)
-                m = 4
-                hidden = Conv2DTranspose(128*m, 4, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
-                hidden = BatchNormalization()(hidden)
-                hidden = Activation('relu')(hidden)
-
-                hidden = UpSampling2D(2)(hidden)
-                hidden = Conv2D(64*m, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
-                hidden = BatchNormalization()(hidden)
-                hidden = Activation('relu')(hidden)
-
-                hidden = UpSampling2D(2)(hidden)
-                hidden = Conv2D(32*m, 3, strides=1, padding='valid', kernel_initializer='glorot_uniform')(hidden)
-                hidden = BatchNormalization()(hidden)
-                hidden = Activation('relu')(hidden)
-
-                hidden = UpSampling2D(2)(hidden)
-                hidden = Conv2D(16*m, 3, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
-                hidden = BatchNormalization()(hidden)
-                hidden = Activation('relu')(hidden)
-
-                hidden = Conv2D(1, 6, strides=1, padding='same', kernel_initializer='glorot_uniform')(hidden)
-                return Activation('tanh')(hidden)
-
-            elif self.data_shape == (2):
-                activation = 'relu'
-                hidden = Dense(20, kernel_initializer='glorot_uniform')(hidden)
-                hidden = Activation(activation)(hidden)
-                hidden = Dense(20, kernel_initializer='glorot_uniform')(hidden)
-                hidden = Activation(activation)(hidden)
-                out_len = 2
-                return Dense(out_len)(hidden)
-            else: 
-                raise RuntimeError("No default generator for data shape: " + str(data_shape))
+        if option == 1:
+            from generators.one import layers
+        elif option == 2:
+            from generators.two import layers
+        elif option == 3:
+            from generators.three import layers
+        elif option == 4:
+            from generators.four import layers
+        else :
+            raise RuntimeError("No default discriminator for option: " + str(d_int))
 
         inp = Input(shape=(self.z_len,))
         (inp, hidden) = conditional_layer(inp)
@@ -117,27 +107,18 @@ class GAN() :
 
         return G
 
-    def discriminator(self, dopt) :
-        def feature_extractor(hidden):
-            m = 2
-            if self.data_shape == (28,28,1): #MNIST
-                hidden = Conv2D(2*m, 5, strides=2, kernel_initializer='glorot_uniform')(hidden)
-                hidden = LeakyReLU()(hidden)
-                hidden = Conv2D(5*m, 5, strides=2, kernel_initializer='glorot_uniform')(hidden)
-                hidden = LeakyReLU()(hidden)
-                hidden = Conv2D(50*m, 4, strides=1, kernel_initializer='glorot_uniform')(hidden)
-                hidden = LeakyReLU()(hidden)
-                return Flatten()(hidden)
-
-            elif self.data_shape == (2):
-                activation = 'relu'
-                hidden = Dense(20, kernel_initializer='glorot_uniform')(hidden)
-                hidden = Activation(activation)(hidden)
-                hidden = Dense(20, kernel_initializer='glorot_uniform')(hidden)
-                return Activation(activation)(hidden)
-            else: 
-                raise RuntimeError("No default discriminator for data shape: " + str(data_shape))
-
+    def discriminator(self, dopt, option) :
+        if option == 1:
+            from discriminators.one import feature_extractor
+        elif option == 2:
+            from discriminators.two import feature_extractor
+        elif option == 3:
+            from discriminators.three import feature_extractor
+        elif option == 4:
+            from discriminators.four import feature_extractor
+        else :
+            raise RuntimeError("No default discriminator for option: " + str(d_int))
+        
         f_inp = Input(shape=self.data_shape)
         f_hidden = feature_extractor(f_inp)
 
@@ -159,7 +140,6 @@ class GAN() :
 
         return D
 
-
     ####################
     ##### Training #####
     ####################
@@ -179,7 +159,10 @@ class GAN() :
         output[range(len(int_array)), int_array] = 1
         return output
 
-    def train(self, x_train, c_train=None, mini_batch_size=128, k=1, nr_batches=25000, vis_step=10, vis_dim=10):
+    def train(self, x_train, c_train=None, mini_batch_size=128, k=1, nr_batches=25000, vis_step=10, vis_dim=10, savefolder="train_images"):
+        if not os.path.exists(savefolder):
+            os.makedirs(savefolder)
+
         if self.categories != 0 and c_train is None:
             raise RuntimeError("c_train not specified for conditional GAN")
 
@@ -190,15 +173,16 @@ class GAN() :
             visualization_noise = self.sample_noise(vis_dim*vis_dim)
 
         print("Starting training:")
+        y_real = np.vstack((np.ones(mini_batch_size), np.zeros(mini_batch_size))).T
+        y_fake = 1-y_real
+        y = np.append(y_real, y_fake, axis=0)
+
         for batch in range(nr_batches):
             if vis_step!=0 and (batch%vis_step == 0 or it+1 == nr_batches):
-                self.save_images(visualization_noise, vis_dim, batch)
+                self.save_images(visualization_noise, vis_dim, batch, savefolder=savefolder)
+                self.save(savefolder)
 
             print("\rBatch " + str(batch+1) + "/" + str(nr_batches), end='\r')
-            
-            y_real = np.vstack((np.ones(mini_batch_size), np.zeros(mini_batch_size))).T
-            y_fake = 1-y_real
-            y = np.append(y_real, y_fake, axis=0)
             
             for it in range(k):
                 # Get training data for D
@@ -226,6 +210,8 @@ class GAN() :
                 z = [z, c_fake] 
             self.GAN.train_on_batch(z, y_real)
 
+        self.save(savefolder)
+
         print("Batch " + str(batch+1) + "/" + str(nr_batches))
 
     ####################
@@ -236,7 +222,7 @@ class GAN() :
         if self.categories == 0:
             fake = self.G.predict(noise)
         else :
-            fake = self.G.predict([noise, to_one_hot(np.arange(len(noise))%self.categories)])
+            fake = self.G.predict([noise, self.to_one_hot(np.arange(len(noise))%self.categories)])
         
         x = fake.shape[1] 
         y = fake.shape[2]
@@ -256,6 +242,14 @@ class GAN() :
 
 def main() :
     import data
+    from argreader import ArgReader
+
+    ar = ArgReader()
+    g_option = int(ar.next_arg())
+    d_option = int(ar.next_arg())
+    conditional = bool(ar.next_arg())
+    optimizer = ar.next_arg()
+
     ### Set params
     type_of_data = 'mnist' # 'mnist'  'lisajou'  'gaussians on circle'
     categories = 10 #only needed for gaussians
@@ -268,12 +262,13 @@ def main() :
 
     x_train, c_train, x_test, c_test = data.get_data(type_of_data, categories, data_size)
 
-    categories = 0
+    if not conditional :
+        categories = 0
     if categories == 0:
         c_train = None    
 
-    gan = GAN(x_train.shape[1:], categories)
-    gan.train(x_train, c_train)
+    gan = GAN(x_train.shape[1:], categories, g_option=g_option, d_option=d_option, optimizer_str=optimizer)
+    gan.train(x_train, c_train, savefolder=ar.arg_string)
 
 if __name__ == "__main__":
     main()
