@@ -5,11 +5,11 @@ from keras.layers import Input, merge, Conv2DTranspose, ZeroPadding2D, BatchNorm
 
 def layers(hidden):
     m = 4
-    hidden = Dense(128*m*7*7)(hidden)
+    hidden = Dense(128*m*4*4)(hidden)
     hidden = BatchNormalization()(hidden)
     hidden = Activation('relu')(hidden)
     
-    hidden = Reshape((7, 7, 128*m), input_shape=(128*7*7,))(hidden)
+    hidden = Reshape((4, 4, 128*m))(hidden)
     hidden = BatchNormalization()(hidden)
     hidden = Activation('relu')(hidden)
 

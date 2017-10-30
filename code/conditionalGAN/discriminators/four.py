@@ -8,6 +8,5 @@ def feature_extractor(hidden):
 	hidden = Conv2D(5*m, 5, strides=2, kernel_initializer='glorot_uniform')(hidden)
 	
 	hidden = Conv2D(50*m, 4, strides=1, kernel_initializer='glorot_uniform')(hidden)
-	hidden = MaxPooling2D(2)(hidden)
 	hidden = LeakyReLU()(hidden)
 	return Flatten()(hidden)
