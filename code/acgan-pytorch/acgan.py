@@ -11,6 +11,8 @@ import torchvision.transforms as transforms
 
 import numpy as np
 
+import argreader
+
 class Reshape(nn.Module):
     def __init__(self, *shape):
         super(Reshape, self).__init__()
@@ -19,11 +21,21 @@ class Reshape(nn.Module):
     def forward(self, inp):
         return inp.view(self.shape)
 
+def int_to_one_hot(categories, y):
+    y = np.array([y])
+    y = torch.from_numpy(y)
+    return to_one_hot(categories, y)
+
 
 def to_one_hot(categories, y):
     if categories == 0 or categories is None:
         return []
-    onehot.zero_()
+
+    batch_size = len(y)
+
+    y = y.view(-1,1)
+    onehot = torch.FloatTensor(batch_size, categories)
+    torch.zeros(batch_size, categories, out=onehot)
     onehot.scatter_(1, y, 1)
     return onehot
 
@@ -78,7 +90,7 @@ class Generator(nn.Module):
         x = self.encode_z(noise)
         
         if self.is_conditional:
-            c = self.encode_c()
+            c = self.encode_c(cond)
             x = torch.cat((x, c), 1)
 
         return self.main(x)
@@ -135,7 +147,7 @@ class ACGAN():
         self.categories = categories
         self.z_len = z_len
         self.imgch = imgch
-        self.D = Discriminator(d_fm, imgch)
+        self.D = Discriminator(d_fm, imgch, categories)
         self.D.apply(self.weights_init)
         self.G = Generator(d_fm, imgch, z_len, categories)
         self.G.apply(self.weights_init)
@@ -143,11 +155,18 @@ class ACGAN():
     def generate(self, inp):
         return self.G(inp)
 
-    def save_images(self, noise, dim, epoch, batch, savefolder='train_images') :
-        if self.categories == 0:
-            fake = self.G(noise).data.numpy()
+    def save_images(self, noise, dim, epoch, batch, savefolder) :
+        if self.categories:
+            dim = noise.size()[0]
+            c = np.repeat(range(dim), dim)
+            c_tensor = torch.from_numpy(c)
+            one_hot = to_one_hot(self.categories, c_tensor)
+            generator_input = noise.repeat(dim,1)
+            generator_input = (generator_input, Variable(one_hot))
         else :
-            raise NotImplementedError()
+            generator_input = (noise,)
+
+        fake = self.G(*generator_input).data.numpy()
             
         
         x = fake.shape[2] 
@@ -168,8 +187,8 @@ class ACGAN():
         
     def fake_conditional_tensors(self, batch_size) :
         rands = np.random.randint(self.categories, size=(batch_size,))
-        fake_conditionals = to_one_hot(self.categories, rands)
-        return torch.from_numpy(fake_conditionals)
+        rands = torch.from_numpy(rands)
+        return rands
         
     def weights_init(self, m):
         classname = m.__class__.__name__
@@ -179,29 +198,27 @@ class ACGAN():
             m.weight.data.normal_(1.0, 0.02)
             m.bias.data.fill_(0)
 
-    def train(self, data="MNIST", c_train=None, mini_batch_size=128, k=1, nr_epochs=50, vis_step=10, vis_dim=10, savefolder="train_images"):
+    def train(self, data="MNIST", mini_batch_size=128, k=1, nr_epochs=50, vis_step=10, vis_dim=10, savename=""):
+        savefolder="save_data_" + savename
         if not os.path.exists(savefolder):
             os.makedirs(savefolder)
-
-        if self.categories != 0 and c_train is None:
-            raise RuntimeError("c_train not specified for conditional GAN")
-
-        if self.categories != 0 and c_train.shape[1] != self.categories:
-            raise RuntimeError("c_train shape "+str(c_train.shape)+" does not agree with number of conditional variables ("+str(self.categories)+")")
 
         #Get dataset ready
         if data == "MNIST":
             dataset = dset.MNIST(root='./data', download=True, 
                   transform=transforms.Compose([transforms.Scale(64),
                                                 transforms.ToTensor(),
-                                                transforms.Lambda(rescale)]),
-                  target_transform=transforms.Lambda(lambda x: to_one_hot(self.categories, x)))
+                                                transforms.Lambda(rescale)]))
 
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=mini_batch_size, shuffle=True, num_workers=3)
 
         #Initialize Variables
         if vis_step != 0:
-            visualization_noise = torch.FloatTensor(vis_dim*vis_dim, self.z_len)
+            if self.categories:
+                vis_noise_len = vis_dim
+            else :
+                vos_noise_len = vis_dim*vis_dim
+            visualization_noise = torch.FloatTensor(vis_noise_len, self.z_len)
             visualization_noise.uniform_(-1,1)
             visualization_noise = Variable(visualization_noise)
 
@@ -216,11 +233,16 @@ class ACGAN():
         z = torch.FloatTensor(mini_batch_size, self.z_len)
         z_v = Variable(z)
 
-        c_real = torch.FloatTensor(mini_batch_size, self.categories)
+        # LongTensor with index for crossentropyloss function
+        c_real = torch.LongTensor(mini_batch_size)
         c_real_v = Variable(c_real)
-        c_fake = torch.FloatTensor(mini_batch_size, self.categories)
-        c_real_v = Variable(c_fake)
-        
+        c_fake = torch.LongTensor(mini_batch_size)
+        c_fake_v = Variable(c_fake)
+
+        #onehot vector for generator input
+        c_fake_one_hot = torch.FloatTensor(mini_batch_size, self.categories)
+        c_fake_one_hot_v = Variable(c_fake_one_hot)
+
         #init misc
         s_criterion = nn.BCELoss()
         c_criterion = nn.CrossEntropyLoss() #Includes the softmax function
@@ -247,39 +269,43 @@ class ACGAN():
 
                 generator_input = (z_v,)
                 if self.categories: #for conditional input
-                    c_fake.copy_(fake_conditional_tensors(this_batch_size))
-                    generator_input += (c_fake_v,)
+                    c_fake.copy_(self.fake_conditional_tensors(this_batch_size))
+                    c_fake_one_hot.copy_(to_one_hot(self.categories, c_fake))
+                    generator_input += (c_fake_one_hot_v,) 
                     
                 # Get input for D
                 x_fake_v = self.G(*generator_input)
                 x_real.resize_as_(x_data).copy_(x_data)
-
-                discriminator_input_real = (x_real_v,)
-                discriminator_input_fake = (x_fake_v.detach(),) #stop the backward pass at generator output
+                
+                discriminator_input_real = x_real_v
+                discriminator_input_fake = x_fake_v.detach() #stop the backward pass at generator output
                     
                 # Update D
                 y_real.resize_(this_batch_size)
                 y_fake.resize_(this_batch_size)
 
+
                 if self.categories: #for conditional input
-                    verdict_real, class_probs_real = self.D(*discriminator_input_real)
+                    (verdict_real, class_probs_real) = self.D(discriminator_input_real)
                 else :
-                    verdict_real = self.D(*discriminator_input_real)
+                    verdict_real = self.D(discriminator_input_real)
                     
                 error_D_real = s_criterion(verdict_real.view(-1), y_real_v)  #reshape verdict: [?,1] -> [?]
+                
+                c_real.resize_as_(c_data).copy_(c_data)
                 if self.categories: # add loss for classc_criterion() prediction
-                    error_D_real += c_criterion(class_probs_real.view(-1), c_real_v)
+                    error_D_real += c_criterion(class_probs_real, c_real_v)
 
                 error_D_real.backward()
 
                 if self.categories: #for conditional input
-                    verdict_fake, class_probs_fake = self.D(*discriminator_input_fake)
+                    (verdict_fake, class_probs_fake) = self.D(discriminator_input_fake)
                 else :
-                    verdict_fake = self.D(*discriminator_input_fake)
+                    verdict_fake = self.D(discriminator_input_fake)
                     
                 error_D_fake = s_criterion(verdict_fake.view(-1), y_fake_v)
                 if self.categories: # add loss for classc_criterion() prediction
-                    error_D_fake += c_criterion(class_probs_fake.view(-1), c_fake_v)
+                    error_D_fake += c_criterion(class_probs_fake, c_fake_v)
 
                 error_D_fake.backward()
 
@@ -296,24 +322,23 @@ class ACGAN():
                     z.uniform_(-1,1)
                     generator_input = (z_v,)
                     if self.categories: #for conditional input
-                        c_fake.copy_(fake_conditional_tensors(this_batch_size))
-                        generator_input += (c_fake_v,)
+                        c_fake.copy_(self.fake_conditional_tensors(this_batch_size))
+                        c_fake_one_hot.copy_(to_one_hot(self.categories, c_fake))
+                        generator_input += (c_fake_one_hot_v,)
 
                     # Get input for D
                     x_fake_v = self.G(*generator_input)
-                    discriminator_input_fake = (x_fake_v,) #continue the backward pass through generator
-                    if self.categories: #for conditional input
-                        discriminator_input_fake += (c_fake_v,)
+                    discriminator_input_fake = x_fake_v #continue the backward pass through generator
 
                     # Update G   
                     if self.categories: #for conditional input
-                        verdict_fake, class_probs_fake = self.D(*discriminator_input_fake)
+                        verdict_fake, class_probs_fake = self.D(discriminator_input_fake)
                     else :
-                        verdict_fake = self.D(*discriminator_input_fake)
+                        verdict_fake = self.D(discriminator_input_fake)
                     
                     error_G = s_criterion(verdict_fake.view(-1), y_real_v) #use real labels
                     if self.categories:
-                        error_G += c_criterion(class_probs_fake.view(-1), c_fake_v)
+                        error_G += c_criterion(class_probs_fake, c_fake_v)
                     
                     error_G.backward()
                     g_opt.step()
@@ -328,5 +353,13 @@ class ACGAN():
         self.save_images(visualization_noise, vis_dim, epoch, batch, savefolder=savefolder)
         self.save(savefolder)
 
-acgan = ACGAN(10)
-acgan.train()
+
+ar = ArgReader()
+categorical = bool(ar.next_arg())
+if categorical:
+    categories = 10
+else:
+    categories = 0
+
+acgan = ACGAN(categories)
+acgan.train(savename=ar.arg_string)
