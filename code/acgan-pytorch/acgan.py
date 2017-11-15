@@ -143,6 +143,7 @@ class Discriminator(nn.Module):
 #imgch: color chanels in produced image
 class ACGAN():
 
+    #def __init__(self, categories=0, z_len=100, g_fm=2, d_fm=1, imgch=1, loadfolder=None):
     def __init__(self, categories=0, z_len=100, g_fm=64, d_fm=32, imgch=1, loadfolder=None):
         self.categories = categories
         self.z_len = z_len
@@ -269,7 +270,9 @@ class ACGAN():
 
                 generator_input = (z_v,)
                 if self.categories: #for conditional input
+                    c_fake.resize_(this_batch_size)
                     c_fake.copy_(self.fake_conditional_tensors(this_batch_size))
+                    c_fake_one_hot.resize_(this_batch_size, self.categories)
                     c_fake_one_hot.copy_(to_one_hot(self.categories, c_fake))
                     generator_input += (c_fake_one_hot_v,) 
                     
@@ -292,8 +295,8 @@ class ACGAN():
                     
                 error_D_real = s_criterion(verdict_real.view(-1), y_real_v)  #reshape verdict: [?,1] -> [?]
                 
-                c_real.resize_as_(c_data).copy_(c_data)
                 if self.categories: # add loss for classc_criterion() prediction
+                    c_real.resize_as_(c_data).copy_(c_data)
                     error_D_real += c_criterion(class_probs_real, c_real_v)
 
                 error_D_real.backward()
