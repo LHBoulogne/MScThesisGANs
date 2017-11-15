@@ -143,8 +143,8 @@ class Discriminator(nn.Module):
 #imgch: color chanels in produced image
 class ACGAN():
 
-    def __init__(self, categories=0, z_len=100, g_fm=2, d_fm=1, imgch=1, loadfolder=None):
-    #def __init__(self, categories=0, z_len=100, g_fm=64, d_fm=32, imgch=1, loadfolder=None):
+    #def __init__(self, categories=0, z_len=100, g_fm=2, d_fm=1, imgch=1, loadfolder=None):
+    def __init__(self, categories=0, z_len=100, g_fm=64, d_fm=32, imgch=1, loadfolder=None):
         self.categories = categories
         self.z_len = z_len
         self.imgch = imgch
