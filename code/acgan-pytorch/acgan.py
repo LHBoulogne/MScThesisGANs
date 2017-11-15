@@ -328,5 +328,5 @@ class ACGAN():
         self.save_images(visualization_noise, vis_dim, epoch, batch, savefolder=savefolder)
         self.save(savefolder)
 
-acgan = ACGAN()
+acgan = ACGAN(10)
 acgan.train()
