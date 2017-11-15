@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 
 import numpy as np
 
-import argreader
+from argreader import *
 
 class Reshape(nn.Module):
     def __init__(self, *shape):
