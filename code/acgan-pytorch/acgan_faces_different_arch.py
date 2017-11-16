@@ -114,7 +114,7 @@ def normal_init(m, mean, std):
 #imgch: color chanels in produced image
 class ACGAN():
 
-    def __init__(self, categories=0, z_len=100, g_fm=2, d_fm=2, imgch=3, loadfolder=None):
+    def __init__(self, categories=0, z_len=100, g_fm=128, d_fm=128, imgch=3, loadfolder=None):
         self.categories = categories
         self.z_len = z_len
         self.imgch = imgch
@@ -349,6 +349,8 @@ if dataname == "MNIST":
 else :
     imgch = 3
 
-print(categories)
+fm = int(ar.next_arg())
+
+print(ar.arg_string)
 acgan = ACGAN(categories, imgch=imgch)
-acgan.train(dataname=dataname, savename=ar.arg_string)
+acgan.train(dataname=dataname, savename=ar.arg_string, g_fm=fm, d_fm=fm)
