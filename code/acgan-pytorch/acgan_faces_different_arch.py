@@ -352,5 +352,5 @@ else :
 fm = int(ar.next_arg())
 
 print(ar.arg_string)
-acgan = ACGAN(categories, imgch=imgch)
-acgan.train(dataname=dataname, savename=ar.arg_string, g_fm=fm, d_fm=fm)
+acgan = ACGAN(categories, imgch=imgch, g_fm=fm, d_fm=fm)
+acgan.train(dataname=dataname, savename=ar.arg_string)
