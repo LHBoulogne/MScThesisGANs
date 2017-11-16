@@ -114,7 +114,7 @@ def normal_init(m, mean, std):
 #imgch: color chanels in produced image
 class ACGAN():
 
-    def __init__(self, categories=0, z_len=100, g_fm=128, d_fm=128, imgch=3, loadfolder=None):
+    def __init__(self, categories=0, z_len=100, g_fm=2, d_fm=2, imgch=3, loadfolder=None):
         self.categories = categories
         self.z_len = z_len
         self.imgch = imgch
@@ -144,13 +144,13 @@ class ACGAN():
         x = fake.shape[2] 
         y = fake.shape[3]
 
-        image = np.empty((dim*x, dim*y))
+        image = np.empty((dim*x, dim*y, 3))
         
         for ity in range(dim):
             for itx in range(dim):
                 xstart = itx*x
                 ystart = ity*y
-                image[xstart:xstart+x,ystart:ystart+y] = fake[itx+dim*ity,0,:,:]
+                image[xstart:xstart+x,ystart:ystart+y] = np.swapaxes(fake[itx+dim*ity,:,:,:],0,2)
         np.save(savefolder + '/' + str(epoch) + '_' + str(batch).zfill(7), image)
 
     def save(self, savefolder) :
