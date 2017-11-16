@@ -106,7 +106,7 @@ class Generator(nn.Module):
 
         self.encode_z = nn.Sequential(
             nn.ConvTranspose2d(z_len, noise_channels, kernel_size=4, stride=1),
-            nn.BatchNorm2d(cond_channels, affine=False),
+            nn.BatchNorm2d(noise_channels, affine=False),
             nn.PReLU()
             )
 
@@ -123,12 +123,12 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(128, 1, kernel_size=6, stride=1, padding=1),
             nn.Tanh())
 
-    def forward(self, noise, cond):
+    def forward(self, noise, cond=None):
         noise = noise.view(-1, self.z_len, 1, 1)
-        cond = cond.view(-1, self.categories, 1, 1)
         x = self.encode_z(noise)
         
         if self.is_conditional:
+            cond = cond.view(-1, self.categories, 1, 1)
             c = self.encode_c(cond)
             x = torch.cat((x, c), 1)
 
