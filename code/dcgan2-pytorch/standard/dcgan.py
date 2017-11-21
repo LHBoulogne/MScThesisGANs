@@ -167,8 +167,8 @@ if (temp.shape[0] != img_size) or (temp.shape[0] != img_size):
 #G = generator(128) #TODO PUT THIS BACK
 #D = discriminator(128)
 
-G = generator(64)
-D = discriminator(64)
+G = generator(2)
+D = discriminator(2)
 
 G.weight_init(mean=0.0, std=0.02)
 D.weight_init(mean=0.0, std=0.02)
@@ -260,6 +260,7 @@ for epoch in range(train_epoch):
         G_losses.append(G_train_loss.data[0])
 
         num_iter += 1
+        continue
 
     epoch_end_time = time.time()
     per_epoch_ptime = epoch_end_time - epoch_start_time
