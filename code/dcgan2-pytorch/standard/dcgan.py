@@ -10,6 +10,8 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
+matplotlib.use('Agg')
+
 # G(z)
 class generator(nn.Module):
     # initializers
