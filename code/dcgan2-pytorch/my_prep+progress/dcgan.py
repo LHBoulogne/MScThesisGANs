@@ -91,12 +91,12 @@ if isCrop:
     ])
 else:
     transform = transforms.Compose([
-        transforms.Scale(64),
+        transforms.Scale((64,64)),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
 transform = transforms.Compose([
-        transforms.Scale(64),
+        transforms.Scale((64,64)),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ])
@@ -150,23 +150,26 @@ savefolder = 'savedata/'
 if not os.path.exists(savefolder):
     os.makedirs(savefolder)
 
+
 def save_images(G, D, noise, dim, epoch, batch, savefolder) :
     generator_input = (noise,)
 
     fake = G(*generator_input).data.numpy()
         
-    
-    x = fake.shape[2] 
-    y = fake.shape[3]
-
+    fake = np.moveaxis(fake, 1, 3)
+    fake = (fake+1)/2
+    x = fake.shape[1]
+    y = fake.shape[2]
     image = np.empty((dim*x, dim*y, 3))
-    
+
     for ity in range(dim):
         for itx in range(dim):
             xstart = itx*x
             ystart = ity*y
-            image[xstart:xstart+x,ystart:ystart+y] = np.swapaxes(fake[itx+dim*ity,:,:,:],0,2)
+            image[xstart:xstart+x,ystart:ystart+y] = fake[itx+dim*ity]
+
     np.save(savefolder + '/' + str(epoch) + '_' + str(batch).zfill(7), image)
+
 
 def save(G, D, savefolder) :
     torch.save(G.state_dict(), os.path.join(savefolder, 'generator.h5'))
