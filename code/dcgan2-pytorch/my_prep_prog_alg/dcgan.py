@@ -315,5 +315,5 @@ class ACGAN():
         self.save_images(visualization_noise, vis_dim, epoch, batch, savefolder=savefolder)
         self.save(savefolder)
 
-acgan = ACGAN(0, imgch=3, g_fm=1, d_fm=1)
+acgan = ACGAN(0, imgch=3, g_fm=64, d_fm=64)
 acgan.train(dataname="CelebA")
