@@ -218,7 +218,7 @@ class ACGAN():
                 self.D.zero_grad()
                 # Get input for G
 
-                z_temp = torch.randn((mini_batch_size, self.z_len)).view(-1, self.z_len, 1, 1)
+                z_temp = torch.randn((this_batch_size, self.z_len)).view(-1, self.z_len, 1, 1)
                 z.resize_as_(z_temp).copy_(z_temp)
 
                 generator_input = (z_v,)

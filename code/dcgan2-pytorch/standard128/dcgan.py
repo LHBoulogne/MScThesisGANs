@@ -1,4 +1,6 @@
 import os, time, sys
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import itertools
 import pickle

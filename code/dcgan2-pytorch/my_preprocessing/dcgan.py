@@ -1,4 +1,6 @@
 import os, time, sys
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import itertools
 import pickle
@@ -148,12 +150,12 @@ if isCrop:
     ])
 else:
     transform = transforms.Compose([
-        transforms.Scale(64),
+        transforms.Scale((64,64)),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
 transform = transforms.Compose([
-        transforms.Scale(64),
+        transforms.Scale((64,64)),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ])
