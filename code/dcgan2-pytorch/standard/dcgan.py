@@ -2,7 +2,6 @@ import os, time, sys
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
 import itertools
 import pickle
 import imageio
@@ -171,8 +170,8 @@ if (temp.shape[0] != img_size) or (temp.shape[0] != img_size):
 #G = generator(128) #TODO PUT THIS BACK
 #D = discriminator(128)
 
-G = generator(2)
-D = discriminator(2)
+G = generator(64)
+D = discriminator(64)
 
 G.weight_init(mean=0.0, std=0.02)
 D.weight_init(mean=0.0, std=0.02)
@@ -219,7 +218,6 @@ for epoch in range(train_epoch):
 
     epoch_start_time = time.time()
     for x_, _ in train_loader:
-        print('im in')
         # train discriminator D
         D.zero_grad()
         
