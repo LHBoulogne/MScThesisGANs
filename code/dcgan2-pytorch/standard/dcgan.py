@@ -215,6 +215,7 @@ for epoch in range(train_epoch):
 
     epoch_start_time = time.time()
     for x_, _ in train_loader:
+        print('im in')
         # train discriminator D
         D.zero_grad()
         
@@ -260,7 +261,7 @@ for epoch in range(train_epoch):
         G_losses.append(G_train_loss.data[0])
 
         num_iter += 1
-        continue
+        break
 
     epoch_end_time = time.time()
     per_epoch_ptime = epoch_end_time - epoch_start_time
@@ -275,6 +276,7 @@ for epoch in range(train_epoch):
     train_hist['D_losses'].append(torch.mean(torch.FloatTensor(D_losses)))
     train_hist['G_losses'].append(torch.mean(torch.FloatTensor(G_losses)))
     train_hist['per_epoch_ptimes'].append(per_epoch_ptime)
+    break
 
 end_time = time.time()
 total_ptime = end_time - start_time
