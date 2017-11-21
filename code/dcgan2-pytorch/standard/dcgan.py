@@ -280,7 +280,6 @@ for epoch in range(train_epoch):
     train_hist['D_losses'].append(torch.mean(torch.FloatTensor(D_losses)))
     train_hist['G_losses'].append(torch.mean(torch.FloatTensor(G_losses)))
     train_hist['per_epoch_ptimes'].append(per_epoch_ptime)
-    break
 
 end_time = time.time()
 total_ptime = end_time - start_time
