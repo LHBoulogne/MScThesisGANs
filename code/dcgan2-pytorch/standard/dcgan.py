@@ -1,4 +1,5 @@
 import os, time, sys
+import matplotlib
 import matplotlib.pyplot as plt
 import itertools
 import pickle
