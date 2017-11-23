@@ -3,3 +3,6 @@
 *.jpg
 *.npy
 *.h5
+*.out
+*.sh
+**/__pycache__/*

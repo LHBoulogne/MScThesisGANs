@@ -166,9 +166,6 @@ if (temp.shape[0] != img_size) or (temp.shape[0] != img_size):
     sys.exit(1)
 
 # network
-#G = generator(128) #TODO PUT THIS BACK
-#D = discriminator(128)
-
 G = generator(128)
 D = discriminator(128)
 
