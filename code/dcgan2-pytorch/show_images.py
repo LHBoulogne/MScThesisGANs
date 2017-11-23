@@ -20,14 +20,15 @@ while True:
     for idx, file in enumerate(imgfiles):
         if idx % step == 0 or idx+1 == len(imgfiles):
             image = np.load(os.path.join(wd, file))
+            image = (image+1)/2
             plt.figure(1)
             plt.gcf().clear()
-
-            plt.imshow(image, cmap='gray', interpolation='nearest')
+            
+            plt.imshow(image)
             plt.title('batch: ' + ''.join(list(filter(str.isdigit, file))))
             plt.draw()
-            plt.pause(0.00001)
+            plt.pause(0.0001)
 
-    plt.imshow(image, cmap='gray', interpolation='nearest')
+    plt.imshow(image)
     plt.draw()
     plt.pause(5)

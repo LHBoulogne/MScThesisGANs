@@ -263,8 +263,7 @@ for epoch in range(train_epoch):
         G_losses.append(G_train_loss.data[0])
 
         num_iter += 1
-        break
-
+        
     epoch_end_time = time.time()
     per_epoch_ptime = epoch_end_time - epoch_start_time
 
