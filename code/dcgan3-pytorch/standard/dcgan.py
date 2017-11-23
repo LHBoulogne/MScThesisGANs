@@ -76,32 +76,6 @@ def normal_init(m, mean, std):
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
 
-
-def save_images(G, D, noise, dim, epoch, batch, savefolder) :
-    generator_input = (noise,)
-
-    fake = G(*generator_input).data.numpy()
-        
-    #reverse the order of the axes (except the batch axis) for correct plotting
-    fake = np.moveaxis(fake, 1, 3)
-    fake = np.moveaxis(fake, 2, 3)
-    fake = (fake+1)/2
-    x = fake.shape[1]
-    y = fake.shape[2]
-    image = np.empty((dim*x, dim*y, 3))
-
-    for ity in range(dim):
-        for itx in range(dim):
-            xstart = itx*x
-            ystart = ity*y
-            image[xstart:xstart+x,ystart:ystart+y] = fake[itx+dim*ity]
-
-    np.save(savefolder + '/' + str(epoch) + '_' + str(batch).zfill(7), image)
-
-def save(G, D, savefolder) :
-    torch.save(G.state_dict(), os.path.join(savefolder, 'generator.h5'))
-    torch.save(D.state_dict(), os.path.join(savefolder, 'discriminator.h5'))
-
 class ACGAN():
         
     def __init__(self, categories=0, z_len=100, g_fm=128, d_fm=128, imgch=3, loadfolder=None):
@@ -126,18 +100,18 @@ class ACGAN():
             generator_input = (noise,)
 
         fake = self.G(*generator_input).data.numpy()
-            
         
-        x = fake.shape[2] 
-        y = fake.shape[3]
+        fake = np.moveaxis(fake, 1, 3)
+        fake = (fake+1)/2
+        x = fake.shape[1]
+        y = fake.shape[2]
+        image = np.empty((dim*x, dim*y, self.imgch))
 
-        image = np.empty((dim*x, dim*y, 3))
-        
         for ity in range(dim):
             for itx in range(dim):
                 xstart = itx*x
                 ystart = ity*y
-                image[xstart:xstart+x,ystart:ystart+y] = np.swapaxes(fake[itx+dim*ity,:,:,:],0,2)
+                image[xstart:xstart+x,ystart:ystart+y] = fake[itx+dim*ity]
         np.save(savefolder + '/' + str(epoch) + '_' + str(batch).zfill(7), image)
 
     def save(self, savefolder) :
@@ -317,5 +291,5 @@ class ACGAN():
         self.save_images(visualization_noise, vis_dim, epoch, batch, savefolder=savefolder)
         self.save(savefolder)
 
-acgan = ACGAN(0, imgch=1, g_fm=1, d_fm=1)
+acgan = ACGAN(0, imgch=1, g_fm=64, d_fm=64)
 acgan.train(dataname="MNIST")

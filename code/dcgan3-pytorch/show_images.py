@@ -4,6 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
+def show(image):
+    if image.shape[2] == 3:
+        plt.imshow(image)
+    else:
+        plt.imshow(image[:,:,0], cmap='gray')
+
+
 step = int(sys.argv[1])
 
 wd = os.path.join('./', sys.argv[2])
@@ -20,15 +27,14 @@ while True:
     for idx, file in enumerate(imgfiles):
         if idx % step == 0 or idx+1 == len(imgfiles):
             image = np.load(os.path.join(wd, file))
-            image = (image+1)/2
             plt.figure(1)
             plt.gcf().clear()
             
-            plt.imshow(image)
+            show(image)
             plt.title('batch: ' + ''.join(list(filter(str.isdigit, file))))
             plt.draw()
             plt.pause(0.0001)
 
-    plt.imshow(image)
+    show(image)
     plt.draw()
     plt.pause(5)
