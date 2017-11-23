@@ -9,10 +9,13 @@ from torch.autograd import Variable
 
 import numpy as np
 
+def rescale(t):
+    return t.div_(127.5).add_(-1)
+
 # G(z)
 class Generator(nn.Module):
     # initializers
-    def __init__(self, d=128):
+    def __init__(self, d=128, imgch=3):
         super(Generator, self).__init__()
         self.deconv1 = nn.ConvTranspose2d(100, d*8, 4, 1, 0)
         self.deconv1_bn = nn.BatchNorm2d(d*8)
@@ -22,7 +25,7 @@ class Generator(nn.Module):
         self.deconv3_bn = nn.BatchNorm2d(d*2)
         self.deconv4 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
         self.deconv4_bn = nn.BatchNorm2d(d)
-        self.deconv5 = nn.ConvTranspose2d(d, 3, 4, 2, 1)
+        self.deconv5 = nn.ConvTranspose2d(d, imgch, 4, 2, 1)
 
     # weight_init
     def weight_init(self, mean, std):
@@ -42,9 +45,9 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
     # initializers
-    def __init__(self, d=128):
+    def __init__(self, d=128, imgch=3):
         super(Discriminator, self).__init__()
-        self.conv1 = nn.Conv2d(3, d, 4, 2, 1)
+        self.conv1 = nn.Conv2d(imgch, d, 4, 2, 1)
         self.conv2 = nn.Conv2d(d, d*2, 4, 2, 1)
         self.conv2_bn = nn.BatchNorm2d(d*2)
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
@@ -79,7 +82,9 @@ def save_images(G, D, noise, dim, epoch, batch, savefolder) :
 
     fake = G(*generator_input).data.numpy()
         
+    #reverse the order of the axes (except the batch axis) for correct plotting
     fake = np.moveaxis(fake, 1, 3)
+    fake = np.moveaxis(fake, 2, 3)
     fake = (fake+1)/2
     x = fake.shape[1]
     y = fake.shape[2]
@@ -103,8 +108,8 @@ class ACGAN():
         self.categories = categories
         self.z_len = z_len
         self.imgch = imgch
-        self.D = Discriminator(d_fm)
-        self.G = Generator(g_fm)
+        self.D = Discriminator(d_fm, imgch)
+        self.G = Generator(g_fm, imgch)
         
         self.G.weight_init(mean=0.0, std=0.02)
         self.D.weight_init(mean=0.0, std=0.02)
@@ -151,12 +156,12 @@ class ACGAN():
 
         #Get dataset ready
         if dataname == "MNIST":
-            dataset = dset.MNIST(root='./data/mnist', download=True, 
+            dataset = dset.MNIST(root='../../../data/mnist', download=True, 
                   transform=transforms.Compose([transforms.Scale((64,64)),
                                                 transforms.ToTensor(),
                                                 transforms.Lambda(rescale)]))
         elif dataname == "CelebA":
-            dataset = dset.ImageFolder(root='../../acgan-pytorch/data/celeba/', 
+            dataset = dset.ImageFolder(root='../../../data/celeba/', 
                   transform=transforms.Compose([transforms.Scale((64,64)),
                                                 transforms.ToTensor(),
                                                 transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]))
@@ -223,9 +228,6 @@ class ACGAN():
 
                 generator_input = (z_v,)
                 if self.categories: #for conditional input
-                    print(self.categories)
-                    print()
-                    print()
                     c_fake.resize_(this_batch_size)
                     c_fake.copy_(self.fake_conditional_tensors(this_batch_size))
                     c_fake_one_hot.resize_(this_batch_size, self.categories)
@@ -315,5 +317,5 @@ class ACGAN():
         self.save_images(visualization_noise, vis_dim, epoch, batch, savefolder=savefolder)
         self.save(savefolder)
 
-acgan = ACGAN(0, imgch=3, g_fm=64, d_fm=64)
-acgan.train(dataname="CelebA")
+acgan = ACGAN(0, imgch=1, g_fm=1, d_fm=1)
+acgan.train(dataname="MNIST")
