@@ -19,8 +19,16 @@ class Reshape(nn.Module):
     def forward(self, inp):
         return inp.view(self.shape)
 
+def compute_same_padding(k) :
+    p_oneside = (k-1)//2
+    correction = 1 if k%2==0 else 0
+    p_lt = p_oneside
+    p_rb = p_oneside + correction
+    return (p_lt, p_rb, p_lt, p_rb)
+
+
 class Generator(nn.Module):
-    def __init__(self, d, imgch=3, z_len=100, categories=0):
+    def __init__(self, d, imgch=3, z_len=100, categories=0, k=4):
         super(Generator, self).__init__()
         self.is_conditional = categories > 0
 
@@ -42,32 +50,41 @@ class Generator(nn.Module):
             nn.ReLU(),
             Reshape(-1, d*noise_channels, 4, 4)
             )
-
-
+        
+        # Same padding for conv layers
+        p = compute_same_padding(k)
         self.main = nn.Sequential(
-            nn.ConvTranspose2d(d*8, d*4, 4, stride=2, padding=1),
+            nn.Upsample(scale_factor=2),
+            nn.ReplicationPad2d(p),
+            nn.Conv2d(d*8, d*4, k),
             nn.BatchNorm2d(d*4),
             nn.ReLU(),
 
-            nn.ConvTranspose2d(d*4, d*2, 4, stride=2, padding=1),
+            nn.Upsample(scale_factor=2),
+            nn.ReplicationPad2d(p),
+            nn.Conv2d(d*4, d*2, k),
             nn.BatchNorm2d(d*2),
             nn.ReLU(),
 
-            nn.ConvTranspose2d(d*2, d, 4, stride=2, padding=1),
+            nn.Upsample(scale_factor=2),
+            nn.ReplicationPad2d(p),
+            nn.Conv2d(d*2, d, k),
             nn.BatchNorm2d(d),
             nn.ReLU(),
 
-            nn.ConvTranspose2d(d, imgch, 4, stride=2, padding=1),
+            nn.Upsample(scale_factor=2),
+            nn.ReplicationPad2d(p),
+            nn.Conv2d(d, imgch, k),
             nn.Tanh()
         )
 
     def forward(self, noise, cond=None):
+        print(noise.data.numpy().shape)
         x = self.encode_z(noise)
         
         if self.is_conditional:
             c = self.encode_c(cond)
             x = torch.cat((x, c), 1)
-
         return self.main(x)
 
     def weight_init(self, mean, std):
@@ -123,9 +140,12 @@ class Discriminator(nn.Module):
 
 
 def normal_init(m, mean, std):
-    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
+    if isinstance(m, nn.Sequential):
+        for mod in m._modules:
+            normal_init(m._modules[mod], mean, std)
 
 class ACGAN():
         
