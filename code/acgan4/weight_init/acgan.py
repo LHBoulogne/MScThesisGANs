@@ -123,9 +123,13 @@ class Discriminator(nn.Module):
 
 
 def normal_init(m, mean, std):
-    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+        print(isinstance(m, nn.ConvTranspose2d), isinstance(m, nn.Conv2d))
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
+    if isinstance(m, nn.Sequential):
+        for mod in m._modules:
+            normal_init(m._modules[mod], mean, std)
 
 class ACGAN():
         
