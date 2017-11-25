@@ -220,7 +220,7 @@ class CoGAN():
             os.makedirs(savefolder)
 
         #Get dataset ready
-        dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((64,64)),
+        dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((32,32)),
                                                 transforms.ToTensor(),
                                                 transforms.Lambda(rescale)]))
 
@@ -237,9 +237,9 @@ class CoGAN():
             visualization_noise = torch.randn((vis_noise_len, self.z_len))
             visualization_noise = Variable(visualization_noise)
 
-        x1_real = torch.FloatTensor(mini_batch_size, self.imgch, 64, 64)
+        x1_real = torch.FloatTensor(mini_batch_size, self.imgch, 32, 32)
         x1_real_v = Variable(x1_real)
-        x2_real = torch.FloatTensor(mini_batch_size, self.imgch, 64, 64)
+        x2_real = torch.FloatTensor(mini_batch_size, self.imgch, 32, 32)
         x2_real_v = Variable(x2_real)
         
         y_real = torch.ones(mini_batch_size*2).mul_(0.9)
