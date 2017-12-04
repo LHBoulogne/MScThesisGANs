@@ -344,7 +344,7 @@ class ACGAN():
 
         self.save_images(visualization_noise, vis_dim, epoch, batch, savefolder=savefolder)
         self.save(savefolder)
-        
+
 ar = ArgReader()
 categories = int(ar.next_arg())
 dataset = ar.next_arg()
@@ -353,4 +353,4 @@ if dataset == "MNIST":
 else :
     imgch = 3
 acgan = ACGAN(categories, imgch=imgch, g_d=64, d_d=64)
-acgan.train(dataname=dataset)
+acgan.train(dataname=dataset, savename=ar.arg_string)
