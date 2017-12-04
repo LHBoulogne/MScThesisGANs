@@ -355,4 +355,4 @@ if dataset == "MNIST":
 else :
     imgch = 3
 acgan = ACGAN(categories, imgch=imgch, g_d=64, d_d=64)
-acgan.train(dataname=dataset)
+acgan.train(dataname=dataset, ar.arg_string)
