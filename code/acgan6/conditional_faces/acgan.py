@@ -393,5 +393,5 @@ elif dataname == "MNIST":
     categories=10
     imgch=1
 
-acgan = ACGAN(categories=categories, imgch=imgch, g_d=2, d_d=2)
+acgan = ACGAN(categories=categories, imgch=imgch, g_d=64, d_d=64)
 acgan.train(dataname=dataname, labelnames=labelnames)
