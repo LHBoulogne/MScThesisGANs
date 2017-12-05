@@ -168,7 +168,7 @@ class ACGAN():
         fake = (fake+1)/2
         x = fake.shape[1]
         y = fake.shape[2]
-        image = np.empty((dim*x, dim*y, self.imgch))
+        image = np.empty((dim*x, n*y, self.imgch))
 
         for ity in range(n):
             for itx in range(dim):
@@ -393,5 +393,5 @@ elif dataname == "MNIST":
     categories=10
     imgch=1
 
-acgan = ACGAN(categories=categories, imgch=imgch, g_d=64, d_d=64)
+acgan = ACGAN(categories=categories, imgch=imgch, g_d=2, d_d=2)
 acgan.train(dataname=dataname, labelnames=labelnames)
