@@ -390,5 +390,5 @@ if dataset == "MNIST":
 else :
     imgch = 3
 
-cogan = CoGAN(categories, imgch=imgch, g_d=2, d_d=2)
+cogan = CoGAN(categories, imgch=imgch, g_d=64, d_d=64)
 cogan.train(dataname=dataset, savename=ar.arg_string)
