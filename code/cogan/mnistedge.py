@@ -7,8 +7,8 @@ import numpy as np
 from PIL import Image
 
 class MNIST_edge(Dataset) :
-    def __init__(self, transform=None) :
-        self.dataset = datasets.MNIST(root='../../../data/mnist', download=True)
+    def __init__(self, transform=None, root='../../../data/mnist') :
+        self.dataset = datasets.MNIST(root=root, download=True)
         self.transform = transform
 
     def __len__(self):
