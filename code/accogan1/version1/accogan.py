@@ -428,5 +428,5 @@ if dataset == "MNIST":
 else :
     imgch = 3
 
-accogan = ACCoGAN(categories, imgch=imgch, g_d=2, d_d=2)
+accogan = ACCoGAN(categories, imgch=imgch, g_d=64, d_d=64)
 accogan.train(dataname=dataset, savename=ar.arg_string, labels1=[0,1,2,3,4,6,7,8,9], labels2=[0,1,2,3,4,5,6,7,8,9])
