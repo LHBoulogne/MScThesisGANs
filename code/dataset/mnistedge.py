@@ -47,7 +47,7 @@ class MNIST_edge(Dataset) :
 
     #Basically infinite
     def __len__(self):
-        return 2**16
+        return 2*(10**6)
 
     #idx is not used. Random combinations of data points are returned 
     def __getitem__(self, idx):
