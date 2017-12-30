@@ -8,7 +8,6 @@ import pickle
 
 import numpy as np
 from PIL import Image
-import random
 
 class MNIST_edge(Dataset) :
     def __init__(self, transform=None, root='../../../data/mnist', labels_original=[0,1,2,3,4,5,6,7,8,9], labels_edge=[0,1,2,3,4,5,6,7,8,9]) :
@@ -45,14 +44,14 @@ class MNIST_edge(Dataset) :
             pickle.dump(self.label_dict, f)
         print("Label dictionary saved.")
 
-    #Basically infinite
+    #large number that should not be reached
     def __len__(self):
         return 2*(10**6)
 
     #idx is not used. Random combinations of data points are returned 
     def __getitem__(self, idx):
-        idx_original = random.randint(0, len(self.original_idcs))
-        idx_edge     = random.randint(0, len(self.edge_idcs))
+        idx_original = np.random.randint(len(self.original_idcs))
+        idx_edge     = np.random.randint(len(self.edge_idcs))
         
         original, original_label = self.dataset.__getitem__(self.original_idcs[idx_original])
         im      , edge_label     = self.dataset.__getitem__(self.edge_idcs[idx_edge])
