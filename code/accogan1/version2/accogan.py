@@ -234,7 +234,7 @@ class ACCoGAN():
             dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((64,64)),
                                                 transforms.ToTensor(),
                                                 transforms.Lambda(rescale)]),
-                                 labels_original=labels1, labels_edge=labels2, balance=False)
+                                 labels_original=labels1, labels_edge=labels2, balance=True)
         elif dataname == "CelebA":
             dataset = CelebA_dataset_coupled(colabelname='Male', root='../../../data/celeba/', 
                   transform=transforms.Compose([transforms.Scale((64,64)),

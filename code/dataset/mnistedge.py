@@ -33,9 +33,9 @@ class MNIST_edge(Dataset) :
             self.edge_probs = self.uniform_label_dict(labels_edge)
             
     def get_balanced_probs(self, labels1, labels2):
-        if len(labels2) > len(labels1):
+        if len(labels2) < len(labels1):
             return self.get_balanced_probs(labels2, labels1)
-        if not len(lables1) == len(labels2) + 1 :
+        if not len(labels1) + 1 == len(labels2):
             raise NotImplementedError("Balancing for multiple missing labels is not implemented yet.")
 
         probs1 = self.uniform_label_dict(labels1)
@@ -90,6 +90,8 @@ class MNIST_edge(Dataset) :
 
     #idx is not used. Random combinations of data points are returned 
     def __getitem__(self, idx):
+        print(self.original_probs)
+        print(self.edge_probs)
         original_class = self.random_label(self.original_probs)
         edge_class     = self.random_label(self.edge_probs)
 
