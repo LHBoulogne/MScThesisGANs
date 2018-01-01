@@ -10,7 +10,12 @@ import numpy as np
 from PIL import Image
 
 class MNIST_edge(Dataset) :
-    def __init__(self, transform=None, root='../../../data/mnist', labels_original=[0,1,2,3,4,5,6,7,8,9], labels_edge=[0,1,2,3,4,5,6,7,8,9]) :
+    def __init__(self, transform=None, root='../../../data/mnist', labels_original=[0,1,2,3,4,5,6,7,8,9], labels_edge=[0,1,2,3,4,5,6,7,8,9], balance=False) :
+        if not len(set(labels_original)) == len(labels_original):
+            raise RuntimeError("labels_original must not conain duplicates")
+        if not len(set(labels_edge)) == len(labels_edge):
+            raise RuntimeError("labels_edge must not conain duplicates")
+
         self.dataset = datasets.MNIST(root=root, download=True)
         self.transform = transform
         label_file_name = os.path.join(root, 'labels.pkl')
@@ -21,13 +26,35 @@ class MNIST_edge(Dataset) :
         else:
             self.create_label_dict(label_file_name)
 
-        self.original_idcs = []
-        self.edge_idcs = []
-        for key in labels_original:
-            self.original_idcs += self.label_dict[key]
+        if balance:
+            (self.original_probs, self.edge_probs) = self.get_balanced_probs(labels_original, labels_edge)
+        else:
+            self.original_probs = self.uniform_label_dict(labels_original)
+            self.edge_probs = self.uniform_label_dict(labels_edge)
+            
+    def get_balanced_probs(self, labels1, labels2):
+        if len(labels2) > len(labels1):
+            return self.get_balanced_probs(labels2, labels1)
+        if not len(lables1) == len(labels2) + 1 :
+            raise NotImplementedError("Balancing for multiple missing labels is not implemented yet.")
 
-        for key in labels_edge:
-            self.edge_idcs += self.label_dict[key]
+        probs1 = self.uniform_label_dict(labels1)
+        q = len(labels1) # is the same as len(labels2)-1
+        p = (q-1)/(q*(q+1))
+        probs2 = {}
+        for label in labels2:
+            probs2[label] = p
+            if not label in labels1:
+                probs2[label] += 1/q
+
+        return (probs1, probs2)
+
+    def uniform_label_dict(self, labels):
+        probs = {}
+        p = 1.0/len(labels)
+        for label in labels:
+            probs[label] = p
+        return probs
 
     def create_label_dict(self, filename) :
         print("Creating label dictionary...")
@@ -48,13 +75,32 @@ class MNIST_edge(Dataset) :
     def __len__(self):
         return 2*(10**6)
 
+    #probs should add up to 1
+    def random_label(self, probs):
+        r = np.random.rand()
+        probsum = 0
+        keys = list(probs.keys())
+        for key in keys:
+            label = key
+            probsum += probs[key]
+            if probsum >= r:
+                break
+        return label
+
+
     #idx is not used. Random combinations of data points are returned 
     def __getitem__(self, idx):
-        idx_original = np.random.randint(len(self.original_idcs))
-        idx_edge     = np.random.randint(len(self.edge_idcs))
+        original_class = self.random_label(self.original_probs)
+        edge_class     = self.random_label(self.edge_probs)
+
+        original_idcs = self.label_dict[original_class]
+        edge_idcs = self.label_dict[edge_class]
+
+        idx_original = np.random.randint(len(original_idcs))
+        idx_edge     = np.random.randint(len(edge_idcs))
         
-        original, original_label = self.dataset.__getitem__(self.original_idcs[idx_original])
-        im      , edge_label     = self.dataset.__getitem__(self.edge_idcs[idx_edge])
+        original, original_label = self.dataset.__getitem__(original_idcs[idx_original])
+        im      , edge_label     = self.dataset.__getitem__(edge_idcs[idx_edge])
         im_np = np.array(im)
         edge_np = cv2.Canny(im_np,0,0)
         edge = Image.fromarray(edge_np)
