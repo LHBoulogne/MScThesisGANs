@@ -90,8 +90,7 @@ class MNIST_edge(Dataset) :
 
     #idx is not used. Random combinations of data points are returned 
     def __getitem__(self, idx):
-        print(self.original_probs)
-        print(self.edge_probs)
+        np.random.seed()
         original_class = self.random_label(self.original_probs)
         edge_class     = self.random_label(self.edge_probs)
 
@@ -116,12 +115,16 @@ class MNIST_edge(Dataset) :
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
+    def rescale(t):
+        return t.div_(127.5).add_(-1)
+
     dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((64,64)),
                                                 transforms.ToTensor(),
-                                                transforms.Lambda(rescale)]))
+                                                transforms.Lambda(rescale)]), 
+                        labels_original=[0,1,2], labels_edge=[0,1], balance=True)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=3)
 
-    for batch, (item, edge, label) in enumerate(dataloader) :
+    for batch, (item, edge, label1, label2) in enumerate(dataloader) :
         item = item.numpy()[0,0]
         edge = edge.numpy()[0,0]
 
@@ -129,5 +132,7 @@ if __name__ == "__main__":
         plt.imshow(item, cmap="gray")
         plt.subplot(2,1,2)
         plt.imshow(edge, cmap="gray")
+        print(label1)
+        print(label2)
         plt.show()
         continue
