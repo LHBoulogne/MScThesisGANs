@@ -224,7 +224,7 @@ class ACCoGAN():
 
     def train(self, dataname="MNIST", mini_batch_size=64, k=1, nr_epochs=20, 
               vis_step=100, vis_dim=10, savename="", 
-              labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,5,6,7,8,9]):
+              labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,5,6,7,8,9], batches=2500):
         savefolder="savedata_" + savename
         if not os.path.exists(savefolder):
             os.makedirs(savefolder)
@@ -293,7 +293,7 @@ class ACCoGAN():
         for epoch in range(nr_epochs):
             batch = -1
             dataiter = iter(dataloader)
-            while True:
+            while batch < batches:
                 batch += 1
                 ### Print progress ###
                 print("\rEpoch: "+str(epoch+1)+ "/" + str(nr_epochs)+", Batch " + str(batch+1), end='\r')
