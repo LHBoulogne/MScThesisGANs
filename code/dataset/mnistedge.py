@@ -26,7 +26,7 @@ class MNIST_edge(Dataset) :
         else:
             self.create_label_dict(label_file_name)
 
-        if balance:
+        if balance and not labels_original == labels_edge:
             (self.original_probs, self.edge_probs) = self.get_balanced_probs(labels_original, labels_edge)
         else:
             self.original_probs = self.uniform_label_dict(labels_original)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     def rescale(t):
-        return t.div_(127.5).add_(-1)
+        return t.div_(127.5).mul_(0.8).add_(-1*0.8)
 
     dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((64,64)),
                                                 transforms.ToTensor(),
