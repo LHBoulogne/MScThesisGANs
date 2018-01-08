@@ -16,7 +16,7 @@ from celeba_coupled import *
 from mnistedge import *
 
 def rescale(t):
-    return t.div_(127.5).mul_(0.8).add_(-1*0.1)
+    return t.div_(127.5).mul_(0.9).add_(-0.9)
 
 class Reshape(nn.Module):
     def __init__(self, *shape):
