@@ -45,11 +45,7 @@ class Generator(nn.Module):
 
         self.main = nn.Sequential(
             Reshape(-1, z_len+categories, 1, 1),
-            nn.ConvTranspose2d(z_len+categories, d*8, 4, stride=1, padding=0),
-            nn.BatchNorm2d(d*8),
-            nn.ReLU(),
-
-            nn.ConvTranspose2d(d*8, d*4, 4, stride=2, padding=1),
+            nn.ConvTranspose2d(z_len+categories, d*4, 4, stride=1, padding=0),
             nn.BatchNorm2d(d*4),
             nn.ReLU(),
 
@@ -124,21 +120,17 @@ class Discriminator(nn.Module):
 
             nn.Conv2d(d*2, d*4, 4, stride=2, padding=1),
             nn.BatchNorm2d(d*4),
-            nn.LeakyReLU(0.2),
-
-            nn.Conv2d(d*4, d*8, 4, stride=2, padding=1),
-            nn.BatchNorm2d(d*8),
             nn.LeakyReLU(0.2)
         )
 
         self.predict_src = nn.Sequential(
-            nn.Conv2d(d*8, 1, 4, stride=1, padding=0),
+            nn.Conv2d(d*4, 1, 4, stride=1, padding=0),
             nn.Sigmoid()
         )
 
         if self.is_conditional:
             self.predict_class = nn.Sequential(
-                nn.Conv2d(d*8, categories, 4, stride=1, padding=0),
+                nn.Conv2d(d*4, categories, 4, stride=1, padding=0),
                 Reshape(-1, categories)
                 )
 
@@ -231,13 +223,13 @@ class ACCoGAN():
 
         #Get dataset ready
         if dataname == "MNIST":
-            dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((64,64)),
+            dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((32,32)),
                                                 transforms.ToTensor(),
                                                 transforms.Lambda(rescale)]),
                                  labels_original=labels1, labels_edge=labels2, balance=True)
         elif dataname == "CelebA":
             dataset = CelebA_dataset_coupled(colabelname='Male', root='../../../data/celeba/', 
-                  transform=transforms.Compose([transforms.Scale((64,64)),
+                  transform=transforms.Compose([transforms.Scale((32,32)),
                                                 transforms.ToTensor(),
                                                 transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]))
         
@@ -428,6 +420,15 @@ if dataset == "MNIST":
 else :
     imgch = 3
 
-accogan = ACCoGAN(categories, imgch=imgch, g_d=64, d_d=64)
-accogan.train(dataname=dataset, savename=ar.arg_string + "_pretraining", labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,5,6,7,8,9], batches=2500)
-accogan.train(dataname=dataset, savename=ar.arg_string + "_nofives",     labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,  6,7,8,9], batches=20000)
+d = int(ar.next_arg())
+staged = ar.next_arg() == "True"
+print(staged)
+
+accogan = ACCoGAN(categories, imgch=imgch, g_d=d, d_d=d)
+if staged :
+    print('staged')
+    accogan.train(dataname=dataset, savename=ar.arg_string + "_pretraining", labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,5,6,7,8,9], batches=2500)
+    accogan.train(dataname=dataset, savename=ar.arg_string + "_nofives",     labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,  6,7,8,9], batches=20000)
+else:
+    print('non staged')
+    accogan.train(dataname=dataset, savename=ar.arg_string, labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,  6,7,8,9], batches=25000)/
