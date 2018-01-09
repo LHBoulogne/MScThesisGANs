@@ -427,8 +427,8 @@ print(staged)
 accogan = ACCoGAN(categories, imgch=imgch, g_d=d, d_d=d)
 if staged :
     print('staged')
-    accogan.train(dataname=dataset, savename=ar.arg_string + "_pretraining", labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,5,6,7,8,9], batches=2500)
+    accogan.train(dataname=dataset, savename=ar.arg_string + "_pretraining", labels1=[0,1,2,3,4,  6,7,8,9], labels2=[0,1,2,3,4,  6,7,8,9], batches=2500)
     accogan.train(dataname=dataset, savename=ar.arg_string + "_nofives",     labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,  6,7,8,9], batches=20000)
 else:
     print('non staged')
-    accogan.train(dataname=dataset, savename=ar.arg_string, labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,  6,7,8,9], batches=25000)/
+    accogan.train(dataname=dataset, savename=ar.arg_string, labels1=[0,1,2,3,4,5,6,7,8,9], labels2=[0,1,2,3,4,  6,7,8,9], batches=25000)
