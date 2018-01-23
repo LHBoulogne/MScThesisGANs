@@ -12,9 +12,9 @@ from PIL import Image
 class MNIST_edge(Dataset) :
     def __init__(self, transform=None, root='../../../data/mnist', labels_original=[0,1,2,3,4,5,6,7,8,9], labels_edge=[0,1,2,3,4,5,6,7,8,9], balance=False) :
         if not len(set(labels_original)) == len(labels_original):
-            raise RuntimeError("labels_original must not conain duplicates")
+            raise RuntimeError("labels_original must not contain duplicates")
         if not len(set(labels_edge)) == len(labels_edge):
-            raise RuntimeError("labels_edge must not conain duplicates")
+            raise RuntimeError("labels_edge must not contain duplicates")
 
         self.dataset = datasets.MNIST(root=root, download=True)
         self.transform = transform

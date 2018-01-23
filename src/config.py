@@ -53,8 +53,8 @@ def parse_args() :
     parser.add_argument('--batches', type=int,  default=25000)
     parser.add_argument('--balance', type=str2bool, default=True)
     parser.add_argument('--colabelname', type=str, default="Male") # CelebA
-    parser.add_argument('--labels1', type=list, default=[0,1,2,3,4,5,6,7,8,9]) # MNIST
-    parser.add_argument('--labels2', type=list, default=[0,1,2,3,4,  6,7,8,9]) # MNIST
+    parser.add_argument('--labels1', nargs='+', type=int, default=[0,1,2,3,4,5,6,7,8,9]) # MNIST
+    parser.add_argument('--labels2', nargs='+', type=int, default=[0,1,2,3,4,  6,7,8,9]) # MNIST
     # Class vector
     parser.add_argument('--c_len', type=int, default=10)
 
