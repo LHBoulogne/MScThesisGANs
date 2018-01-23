@@ -6,6 +6,6 @@
 *.out
 *.sh
 **/__pycache__/*
-./code
-./aux
-./Notes
+/code
+/aux
+/Notes
