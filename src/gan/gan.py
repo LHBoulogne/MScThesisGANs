@@ -54,7 +54,8 @@ class GAN():
             elif self.config.dataname == "CelebA":
                 dataset = CelebA_dataset_coupled(colabelname=self.config.colabelname, 
                       root='../data/celeba/', 
-                      transform=transforms.Compose([transforms.Scale((self.config.imsize,self.config.imsize)),
+                      transform=transforms.Compose([transforms.CenterCrop(160),
+                                                    transforms.Scale((self.config.imsize,self.config.imsize)),
                                                     transforms.ToTensor(),
                                                     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])) 
                       # TODO: batches=self.config.batches)
@@ -66,7 +67,8 @@ class GAN():
                                                     transforms.Lambda(rescale)]))
             elif self.config.dataname == "CelebA":
                 dataset = dset.ImageFolder(root='../data/celeba/', 
-                      transform=transforms.Compose([transforms.Scale((self.config.imsize,self.config.imsize)),
+                      transform=transforms.Compose([transforms.CenterCrop(160),
+                                                    transforms.Scale((self.config.imsize,self.config.imsize)),
                                                     transforms.ToTensor(),
                                                     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]))
         return dataset
