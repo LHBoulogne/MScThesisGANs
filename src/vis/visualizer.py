@@ -79,7 +79,8 @@ class Visualizer() :
         if self.config.coupled:
             self.save_training_img(fake[0].data.numpy(), epoch, batch, 0) 
             self.save_training_img(fake[1].data.numpy(), epoch, batch, 1) 
-        self.save_training_img(fake[0].data.numpy(), epoch, batch) 
+        else:
+            self.save_training_img(fake[0].data.numpy(), epoch, batch) 
 
     def save_test_img(self, output, nr=None):
         save_name = 'test'

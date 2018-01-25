@@ -44,13 +44,9 @@ class GAN():
     def get_dataset(self):
         if self.config.coupled: 
             if self.config.dataname == "MNIST":
-                dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((self.config.imsize,self.config.imsize)),
+                dataset = MNIST_edge(self.config, transform=transforms.Compose([transforms.Scale((self.config.imsize,self.config.imsize)),
                                                transforms.ToTensor(),
-                                               transforms.Lambda(rescale)]),
-                                     labels_original=self.config.labels1, 
-                                     labels_edge=self.config.labels2, 
-                                     balance=self.config.balance) #TODO:, batches=self.config.batches)
-            
+                                               transforms.Lambda(rescale)]))
             elif self.config.dataname == "CelebA":
                 dataset = CelebA_dataset_coupled(colabelname=self.config.colabelname, 
                       root='../data/celeba/', 
@@ -109,8 +105,9 @@ class GAN():
 
                 if batch%self.config.snap_step == 0:
                     self.make_snapshot(epoch, batch, trainer, imgsaver)
-
+            self.make_snapshot(epoch, batch, trainer, imgsaver)
             epoch += 1
+
 
     def test(self):
         self.load()

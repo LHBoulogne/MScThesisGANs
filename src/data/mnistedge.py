@@ -10,11 +10,11 @@ import numpy as np
 from PIL import Image
 
 class MNIST_edge(Dataset) :
-    def __init__(self, transform=None, root='../../../data/mnist', labels_original=[0,1,2,3,4,5,6,7,8,9], labels_edge=[0,1,2,3,4,5,6,7,8,9], balance=False) :
-        if not len(set(labels_original)) == len(labels_original):
-            raise RuntimeError("labels_original must not contain duplicates")
-        if not len(set(labels_edge)) == len(labels_edge):
-            raise RuntimeError("labels_edge must not contain duplicates")
+    def __init__(self, config, transform=None, root='../../../data/mnist') :
+        if not len(set(config.labels1)) == len(config.labels1):
+            raise RuntimeError("config.labels1 must not contain duplicates")
+        if not len(set(config.labels2)) == len(config.labels2):
+            raise RuntimeError("config.labels2 must not contain duplicates")
 
         self.dataset = datasets.MNIST(root=root, download=True)
         self.transform = transform
@@ -26,11 +26,13 @@ class MNIST_edge(Dataset) :
         else:
             self.create_label_dict(label_file_name)
 
-        if balance and not labels_original == labels_edge:
-            (self.original_probs, self.edge_probs) = self.get_balanced_probs(labels_original, labels_edge)
+        if config.balance and not config.labels1 == config.labels2:
+            (self.original_probs, self.edge_probs) = self.get_balanced_probs(config.labels1, config.labels2)
         else:
-            self.original_probs = self.uniform_label_dict(labels_original)
-            self.edge_probs = self.uniform_label_dict(labels_edge)
+            self.original_probs = self.uniform_label_dict(config.labels1)
+            self.edge_probs = self.uniform_label_dict(config.labels2)
+
+        self.length = config.batches * config.mini_batch_size
             
     def get_balanced_probs(self, labels1, labels2):
         if len(labels2) < len(labels1):
@@ -73,7 +75,7 @@ class MNIST_edge(Dataset) :
 
     #large number that should not be reached
     def __len__(self):
-        return 2*(10**6)
+        return self.length
 
     #probs should add up to 1
     def random_label(self, probs):
@@ -111,28 +113,3 @@ class MNIST_edge(Dataset) :
             original = self.transform(original)
 
         return original, edge, original_label, edge_label #TODO: double the label array?
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    def rescale(t):
-        return t.div_(127.5).mul_(0.8).add_(-1*0.8)
-
-    dataset = MNIST_edge(transform=transforms.Compose([transforms.Scale((64,64)),
-                                                transforms.ToTensor(),
-                                                transforms.Lambda(rescale)]), 
-                        labels_original=[0,1,2], labels_edge=[0,1], balance=True)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=3)
-
-    for batch, (item, edge, label1, label2) in enumerate(dataloader) :
-        item = item.numpy()[0,0]
-        edge = edge.numpy()[0,0]
-
-        plt.subplot(2,1,1)
-        plt.imshow(item, cmap="gray")
-        plt.subplot(2,1,2)
-        plt.imshow(edge, cmap="gray")
-        print(label1)
-        print(label2)
-        plt.show()
-        continue

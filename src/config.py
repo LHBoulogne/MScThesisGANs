@@ -25,7 +25,7 @@ def parse_args() :
     #### Snapshot params ####
     ##############################
     parser.add_argument('--visualize_training', type=str2bool, default=True)
-    parser.add_argument('--snap_step', type=int, default=100)
+    parser.add_argument('--snap_step', type=int, default=500)
     #### saving training images #####
     parser.add_argument('--vis_dim', type=int, default=6)
     #### plotting ####
@@ -39,7 +39,7 @@ def parse_args() :
     #### Training params ####
     #########################
     parser.add_argument('--mini_batch_size', type=int, default=64)
-    parser.add_argument('--epochs', type=int, default=1)
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--k', type=int, default=1)
     parser.add_argument('--labelsmoothing', type=str2bool, default=True)
     
