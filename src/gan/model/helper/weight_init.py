@@ -12,7 +12,7 @@ def normal_init(m, mean, std):
     if hasattr(m, 'weight'):
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
-    else :
+    elif not isinstance(m, nn.InstanceNorm2d):
         for mod in m._modules:
             normal_init(m._modules[mod], mean, std)
 
@@ -25,4 +25,3 @@ def normal_init(m, mean, std):
         for mod in m._modules:
             normal_init(m._modules[mod], mean, std)
 '''
-            
