@@ -92,7 +92,7 @@ class GAN():
             print("Epoch: "+str(epoch+1)+ "/" + str(self.config.epochs) + ' '*10)
             for batch, data in enumerate(dataloader) :
                 print("\rBatch " + str(batch), end='\r')
-
+                
                 trainer.next_step(data)
                 trainer.update_discriminator(self.G, self.D)
 

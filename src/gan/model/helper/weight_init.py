@@ -1,9 +1,22 @@
 import torch.nn as nn
 
-def weight_init(model):
-    for m in model._modules:
-        normal_init(model._modules[m], 0.0, 0.02)
+def weight_init(model, mode):
+	if mode == 'normal':
+	    for m in model._modules:
+	        normal_init(model._modules[m], 0.0, 0.02)
+	elif mode == 'pytorch_default':
+		return
 
+
+def normal_init(m, mean, std):
+    if hasattr(m, 'weight'):
+        m.weight.data.normal_(mean, std)
+        m.bias.data.zero_()
+    else :
+        for mod in m._modules:
+            normal_init(m._modules[mod], mean, std)
+
+'''
 def normal_init(m, mean, std):
     if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         m.weight.data.normal_(mean, std)
@@ -11,3 +24,5 @@ def normal_init(m, mean, std):
     if isinstance(m, nn.Sequential):
         for mod in m._modules:
             normal_init(m._modules[mod], mean, std)
+'''
+            

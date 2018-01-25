@@ -62,6 +62,8 @@ def parse_args() :
     parser.add_argument('--imsize', type=int, default=64)
     parser.add_argument('--imgch', type=int, default=1)
     parser.add_argument('--categories', type=int, default=10)
+    parser.add_argument('--weight_init', type=str, default='normal')
+    parser.add_argument('--norm', type=str, default='batch')
     # Generator
     parser.add_argument('--generator', type=str, default='dcgan')
     parser.add_argument('--z_len', type=int, default=100)
@@ -70,13 +72,17 @@ def parse_args() :
     parser.add_argument('--g_lr', type=int, default=0.0002)
     parser.add_argument('--g_b1', type=int, default=0.5)
     parser.add_argument('--g_b2', type=int, default=0.999)
+    parser.add_argument('--g_extra_conv', type=str2bool, default=False)
+    parser.add_argument('--g_first_layer', type=str, default='convtransposed')
+    
     # Discriminator
     parser.add_argument('--discriminator', type=str, default='dcgan')
     parser.add_argument('--d_dim', type=int, default=64)
     parser.add_argument('--d_lr', type=int, default=0.0002)
     parser.add_argument('--d_b1', type=int, default=0.5)
     parser.add_argument('--d_b2', type=int, default=0.999)
-    
+    parser.add_argument('--d_last_layer', type=str, default='conv')
+
 
 
 

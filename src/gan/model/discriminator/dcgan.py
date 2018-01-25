@@ -10,41 +10,42 @@ class Discriminator(nn.Module):
 
         self.first_a = nn.Sequential(
             nn.Conv2d(config.imgch, config.d_dim, 4, stride=2, padding=1),
-            nn.BatchNorm2d(config.d_dim),
+            Norm2d(config.d_dim, config.norm),
             nn.LeakyReLU(0.2)
         )
         
         if config.coupled:
             self.first_b = nn.Sequential(
                 nn.Conv2d(config.imgch, config.d_dim, 4, stride=2, padding=1),
-                nn.BatchNorm2d(config.d_dim),
+                Norm2d(config.d_dim, config.norm),
                 nn.LeakyReLU(0.2)
             )
         
         self.main = nn.Sequential(
             nn.Conv2d(config.d_dim,  config.d_dim*2, 4, stride=2, padding=1),
-            nn.BatchNorm2d(config.d_dim*2),
+            Norm2d(config.d_dim*2, config.norm),
             nn.LeakyReLU(0.2),
 
             nn.Conv2d(config.d_dim*2, config.d_dim*4, 4, stride=2, padding=1),
-            nn.BatchNorm2d(config.d_dim*4),
+            Norm2d(config.d_dim*4, config.norm),
             nn.LeakyReLU(0.2),
 
             nn.Conv2d(config.d_dim*4, config.d_dim*8, 4, stride=2, padding=1),
-            nn.BatchNorm2d(config.d_dim*8),
+            Norm2d(config.d_dim*8, config.norm),
             nn.LeakyReLU(0.2)
         )
 
         self.predict_src = nn.Sequential(
-            nn.Conv2d(config.d_dim*8, 1, 4, stride=1, padding=0),
+            FeatureMaps2Vector(config.d_dim*8, 1, config.d_last_layer),
             nn.Sigmoid()
         )
 
         if self.auxclas:
             self.predict_class = nn.Sequential(
-                nn.Conv2d(config.d_dim*8, config.categories, 4, stride=1, padding=0),
-                Reshape(-1, config.categories)
+                FeatureMaps2Vector(config.d_dim*8, config.categories, config.d_last_layer),
                 )
+
+        weight_init(self, config.weight_init)
 
     def single_forward(self, inp, first):
         hidden = first(inp)

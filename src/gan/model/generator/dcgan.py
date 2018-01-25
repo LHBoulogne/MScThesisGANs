@@ -12,35 +12,45 @@ class Generator(nn.Module):
         if config.auxclas:
             c_len = config.categories
         self.main = nn.Sequential(
-            Reshape(-1, config.z_len+c_len, 1, 1),
-            nn.ConvTranspose2d(config.z_len+c_len, config.g_dim*8, 4, stride=1, padding=0),
-            nn.BatchNorm2d(config.g_dim*8),
+            Vector2FeatureMaps(config.z_len+c_len, config.g_dim*8, config.g_first_layer),
+            Norm2d(config.g_dim*8, config.norm),
             nn.ReLU(),
 
             nn.ConvTranspose2d(config.g_dim*8, config.g_dim*4, 4, stride=2, padding=1),
-            nn.BatchNorm2d(config.g_dim*4),
+            Norm2d(config.g_dim*4, config.norm),
             nn.ReLU(),
 
             nn.ConvTranspose2d(config.g_dim*4, config.g_dim*2, 4, stride=2, padding=1),
-            nn.BatchNorm2d(config.g_dim*2),
+            Norm2d(config.g_dim*2, config.norm),
             nn.ReLU(),
 
             nn.ConvTranspose2d(config.g_dim*2, config.g_dim, 4, stride=2, padding=1),
-            nn.BatchNorm2d(config.g_dim),
+            Norm2d(config.g_dim, config.norm),
             nn.ReLU()
         )
 
-        self.last_a = nn.Sequential(
-            nn.ConvTranspose2d(config.g_dim, config.imgch, 4, stride=2, padding=1),
-            nn.Tanh()
-        )
+        self.last_a = self.get_last_layers(config)
         if config.coupled:
-            self.last_b = nn.Sequential(
+            self.last_b = self.get_last_layers(config)
+
+        weight_init(self, config.weight_init)
+
+    def get_last_layers(self, config):
+        if config.g_extra_conv:
+            last = nn.Sequential(
+                nn.ConvTranspose2d(config.g_dim, config.g_dim//2, 4, stride=2, padding=1),
+                Norm2d(config.g_dim//2, config.norm),
+                nn.ReLU(),
+
+                nn.Conv2d(config.g_dim//2, config.imgch, 3, stride=1, padding=1),
+                nn.Tanh()
+            )
+        else:
+            last = nn.Sequential(
                 nn.ConvTranspose2d(config.g_dim, config.imgch, 4, stride=2, padding=1),
                 nn.Tanh()
             )
-
-        weight_init(self)
+        return last
 
     def forward(self, z, c_a=None, c_b=None): #for accogans and cogans
         if self.auxclas:
