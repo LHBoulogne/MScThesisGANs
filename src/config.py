@@ -64,6 +64,7 @@ def parse_args() :
     parser.add_argument('--categories', type=int, default=10)
     parser.add_argument('--weight_init', type=str, default='normal')
     parser.add_argument('--norm', type=str, default='batch')
+    parser.add_argument('--blocks', type=int, default=3)
     # Generator
     parser.add_argument('--generator', type=str, default='dcgan')
     parser.add_argument('--z_len', type=int, default=100)
@@ -82,10 +83,6 @@ def parse_args() :
     parser.add_argument('--d_b1', type=int, default=0.5)
     parser.add_argument('--d_b2', type=int, default=0.999)
     parser.add_argument('--d_last_layer', type=str, default='conv')
-
-
-
-
 
 
     config = parser.parse_args()

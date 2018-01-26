@@ -11,23 +11,23 @@ class Generator(nn.Module):
         c_len = 0
         if config.auxclas:
             c_len = config.categories
-        self.main = nn.Sequential(
-            Vector2FeatureMaps(config.z_len+c_len, config.g_dim*8, config.g_first_layer),
-            Norm2d(config.g_dim*8, config.norm),
-            nn.ReLU(),
 
-            nn.ConvTranspose2d(config.g_dim*8, config.g_dim*4, 4, stride=2, padding=1),
-            Norm2d(config.g_dim*4, config.norm),
-            nn.ReLU(),
-
-            nn.ConvTranspose2d(config.g_dim*4, config.g_dim*2, 4, stride=2, padding=1),
-            Norm2d(config.g_dim*2, config.norm),
-            nn.ReLU(),
-
-            nn.ConvTranspose2d(config.g_dim*2, config.g_dim, 4, stride=2, padding=1),
-            Norm2d(config.g_dim, config.norm),
+        mult = 2**config.blocks
+        layers = (
+            Vector2FeatureMaps(config.z_len+c_len, config.g_dim*mult, config.g_first_layer),
+            Norm2d(config.g_dim*mult, config.norm),
             nn.ReLU()
-        )
+            )
+
+        for it in range(config.blocks-1, -1, -1):
+            mult = 2**it
+            layers += (
+                nn.ConvTranspose2d(config.g_dim*mult*2, config.g_dim*mult, 4, stride=2, padding=1),
+                Norm2d(config.g_dim*mult, config.norm),
+                nn.ReLU()
+                )
+
+        self.main = nn.Sequential(*layers)
 
         self.last_a = self.get_last_layers(config)
         if config.coupled:

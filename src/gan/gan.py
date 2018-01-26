@@ -36,8 +36,8 @@ class GAN():
         torch.save(self.D.state_dict(), os.path.join(self.config.savefolder, 'discriminator.h5'))
 
     def load(self) : #TODO: Make functionality that you can directly load a GAN because the config is also saved
-        gstate = torch.load(os.path.join(self.config.savefolder, 'generator.h5'))
-        dstate = torch.load(os.path.join(self.config.savefolder, 'discriminator.h5'))
+        gstate = torch.load(os.path.join(self.config.loadfolder, 'generator.h5'))
+        dstate = torch.load(os.path.join(self.config.loadfolder, 'discriminator.h5'))
         self.G.load_state_dict(gstate)
         self.D.load_state_dict(dstate)
     

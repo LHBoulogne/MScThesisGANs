@@ -21,28 +21,26 @@ class Discriminator(nn.Module):
                 nn.LeakyReLU(0.2)
             )
         
-        self.main = nn.Sequential(
-            nn.Conv2d(config.d_dim,  config.d_dim*2, 4, stride=2, padding=1),
-            Norm2d(config.d_dim*2, config.norm),
-            nn.LeakyReLU(0.2),
+        layers = ()
+        for it in range(config.blocks):
+            mult = 2**it
+            layers += (
+                nn.Conv2d(config.d_dim*mult,  config.d_dim*mult*2, 4, stride=2, padding=1),
+                Norm2d(config.d_dim*mult*2, config.norm),
+                nn.LeakyReLU(0.2)
+                )
 
-            nn.Conv2d(config.d_dim*2, config.d_dim*4, 4, stride=2, padding=1),
-            Norm2d(config.d_dim*4, config.norm),
-            nn.LeakyReLU(0.2),
+        self.main = nn.Sequential(*layers)
 
-            nn.Conv2d(config.d_dim*4, config.d_dim*8, 4, stride=2, padding=1),
-            Norm2d(config.d_dim*8, config.norm),
-            nn.LeakyReLU(0.2)
-        )
-
+        mult = 2**config.blocks
         self.predict_src = nn.Sequential(
-            FeatureMaps2Vector(config.d_dim*8, 1, config.d_last_layer),
+            FeatureMaps2Vector(config.d_dim*mult, 1, config.d_last_layer),
             nn.Sigmoid()
         )
 
         if self.auxclas:
             self.predict_class = nn.Sequential(
-                FeatureMaps2Vector(config.d_dim*8, config.categories, config.d_last_layer),
+                FeatureMaps2Vector(config.d_dim*mult, config.categories, config.d_last_layer),
                 )
 
         weight_init(self, config.weight_init)
