@@ -5,6 +5,7 @@
 *.h5
 *.out
 *.sh
+*.pyc
 **/__pycache__/*
 /code
 /aux
