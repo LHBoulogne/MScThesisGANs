@@ -3,18 +3,21 @@ import torch.nn as nn
 def weight_init(model, mode):
 	if mode == 'normal':
 	    for m in model._modules:
-	        normal_init(model._modules[m], 0.0, 0.02)
+	        normal_init(model._modules[m])
 	elif mode == 'pytorch_default':
 		return
 
 
-def normal_init(m, mean, std):
+def normal_init(m):
     if hasattr(m, 'weight'):
-        m.weight.data.normal_(mean, std)
+        if isinstance(m, nn.BatchNorm2d):
+            m.weight.data.normal_(1, 0.02)
+        else :
+            m.weight.data.normal_(0, 0.02)
         m.bias.data.zero_()
-    elif not isinstance(m, nn.InstanceNorm2d):
+    else:
         for mod in m._modules:
-            normal_init(m._modules[mod], mean, std)
+            normal_init(m._modules[mod])
 
 '''
 def normal_init(m, mean, std):

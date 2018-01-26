@@ -62,7 +62,7 @@ class GANTrainer():
     def init_error_dicts(self):
         self.error_dicts = []
         self.error_dicts += [{}]
-        if self.config.auxclas:
+        if self.config.coupled:
             self.error_dicts += [{}]
         for error_dict in self.error_dicts:
             self.init_error_dict(error_dict)
