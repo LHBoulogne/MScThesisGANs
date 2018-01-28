@@ -98,5 +98,5 @@ def parse_args() :
     config.g_weight_decay = config.weight_decay
 
     config.savefolder = os.path.join('../savedata/', config.savefolder)
-    config.loadfolder = os.path.join('../savedata/', config.savefolder)
+    config.loadfolder = os.path.join('../savedata/', config.loadfolder)
     return config
