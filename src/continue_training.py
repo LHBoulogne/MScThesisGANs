@@ -9,6 +9,6 @@ if __name__ == "__main__":
         gan.train()
         gan.save()
     else: # test
-    	config.loadfolder = config.savefolder
-    	gan.load()
+        config.loadfolder = config.savefolder
+        gan.load()
         gan.test()
