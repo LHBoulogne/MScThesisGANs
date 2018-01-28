@@ -49,6 +49,7 @@ def parse_args() :
 
     #### Dataset params ####
     parser.add_argument('--dataname', type=str, default="MNIST")
+    parser.add_argument('--cropsize', type=int, default=160)
     # Coupled
     parser.add_argument('--batches', type=int,  default=25000)
     parser.add_argument('--balance', type=str2bool, default=True)
@@ -61,27 +62,33 @@ def parse_args() :
     #### Model params ####
     parser.add_argument('--imsize', type=int, default=64)
     parser.add_argument('--imgch', type=int, default=1)
-    parser.add_argument('--categories', type=int, default=10)
     parser.add_argument('--weight_init', type=str, default='normal')
     parser.add_argument('--norm', type=str, default='batch')
     parser.add_argument('--blocks', type=int, default=3)
+
+    # auxclass
+    parser.add_argument('--categories', type=int, default=10)
+    parser.add_argument('--c_error_weight', type=float, default=1.0)
+    
     # Generator
     parser.add_argument('--generator', type=str, default='dcgan')
     parser.add_argument('--z_len', type=int, default=100)
     parser.add_argument('--z_distribution', type=str, default='uniform')
     parser.add_argument('--g_dim', type=int, default=64)
-    parser.add_argument('--g_lr', type=int, default=0.0002)
-    parser.add_argument('--g_b1', type=int, default=0.5)
-    parser.add_argument('--g_b2', type=int, default=0.999)
+    parser.add_argument('--g_lr', type=float, default=0.0002)
+    parser.add_argument('--g_b1', type=float, default=0.5)
+    parser.add_argument('--g_b2', type=float, default=0.999)
+    parser.add_argument('--g_weight_decay', type=float, default=0.0)
     parser.add_argument('--g_extra_conv', type=str2bool, default=False)
     parser.add_argument('--g_first_layer', type=str, default='convtransposed')
     
     # Discriminator
     parser.add_argument('--discriminator', type=str, default='dcgan')
     parser.add_argument('--d_dim', type=int, default=64)
-    parser.add_argument('--d_lr', type=int, default=0.0002)
-    parser.add_argument('--d_b1', type=int, default=0.5)
-    parser.add_argument('--d_b2', type=int, default=0.999)
+    parser.add_argument('--d_lr', type=float, default=0.0002)
+    parser.add_argument('--d_b1', type=float, default=0.5)
+    parser.add_argument('--d_b2', type=float, default=0.999)
+    parser.add_argument('--d_weight_decay', type=float, default=0.0)
     parser.add_argument('--d_last_layer', type=str, default='conv')
 
 

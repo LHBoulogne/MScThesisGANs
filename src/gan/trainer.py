@@ -55,8 +55,8 @@ class GANTrainer():
         #init misc
         self.s_criterion = nn.BCELoss()
         self.c_criterion = nn.CrossEntropyLoss() #Includes the softmax function
-        self.g_opt = optim.Adam(G.parameters(), lr=config.g_lr, betas=(config.g_b1, config.g_b2))
-        self.d_opt = optim.Adam(D.parameters(), lr=config.d_lr, betas=(config.d_b1, config.d_b2))
+        self.g_opt = optim.Adam(G.parameters(), lr=config.g_lr, betas=(config.g_b1, config.g_b2), weight_decay=config.g_weight_decay)
+        self.d_opt = optim.Adam(D.parameters(), lr=config.d_lr, betas=(config.d_b1, config.d_b2), weight_decay=config.d_weight_decay)
 
 
     def init_error_dicts(self):
@@ -170,7 +170,7 @@ class GANTrainer():
 
         source_error = self.s_criterion(verdict.view(-1), y_v)
         if self.config.auxclas: # add loss for class_criterion() prediction
-            classification_error = self.c_criterion(class_probs, c_v)
+            classification_error = self.c_criterion(class_probs, c_v) * self.config.c_error_weight
             return (source_error, classification_error)
 
         return (source_error,)
