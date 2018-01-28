@@ -91,8 +91,12 @@ def parse_args() :
     parser.add_argument('--d_weight_decay', type=float, default=0.0)
     parser.add_argument('--d_last_layer', type=str, default='conv')
 
-
+    parser.add_argument('--weight_decay', type=float, default=0.0)
     config = parser.parse_args()
+
+    config.d_weight_decay = config.weight_decay
+    config.g_weight_decay = config.weight_decay
+
     config.savefolder = os.path.join('../savedata/', config.savefolder)
     config.loadfolder = os.path.join('../savedata/', config.savefolder)
     return config
