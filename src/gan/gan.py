@@ -98,13 +98,14 @@ class GAN():
 
                 #Allow for multiple updates of D with respect to G
                 steps_without_G_update += 1
-                if steps_without_G_update == self.config.k: 
+                if steps_without_G_update >= self.config.k: 
                     steps_without_G_update = 0
-
-                    trainer.update_generator(self.G, self.D)
-
+                    for it in range(self.config.G_updates):
+                        trainer.update_generator(self.G, self.D)
+                
                 if batch%self.config.snap_step == 0:
                     self.make_snapshot(epoch, batch, trainer, imgsaver)
+
             self.make_snapshot(epoch, batch, trainer, imgsaver)
             epoch += 1
 

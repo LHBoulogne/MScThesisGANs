@@ -41,6 +41,7 @@ def parse_args() :
     parser.add_argument('--mini_batch_size', type=int, default=64)
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--k', type=int, default=1)
+    parser.add_argument('--G_updates', type=int, default=1)
     parser.add_argument('--labelsmoothing', type=str2bool, default=True)
     
     #### GAN type ####
