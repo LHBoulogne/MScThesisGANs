@@ -1,34 +1,54 @@
 
 import torch
 import torch.nn as nn
+from gan.model.helper.layers import *
+# Augmented code from https://github.com/mingyuliutw/CoGAN/blob/master/cogan_pytorch/src/net_cogan_mnistedge.py
 
 # Generator Model
+# Original paper parameters: 
+# g_dim = 128
+# g_first_layer = 'conv'
 class Generator(nn.Module):
     def __init__(self, config):
         super(Generator, self).__init__()
-        self.dconv0 = nn.ConvTranspose2d(config.z_len, 1024, kernel_size=4, stride=1)
-        self.bn0 = nn.BatchNorm2d(1024, affine=False)
-        self.prelu0 = nn.PReLU()
-        self.dconv1 = nn.ConvTranspose2d(1024, 512, kernel_size=3, stride=2, padding=1)
-        self.bn1 = nn.BatchNorm2d(512, affine=False)
-        self.prelu1 = nn.PReLU()
-        self.dconv2 = nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1)
-        self.bn2 = nn.BatchNorm2d(256, affine=False)
-        self.prelu2 = nn.PReLU()
-        self.dconv3 = nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1)
-        self.bn3 = nn.BatchNorm2d(128, affine=False)
-        self.prelu3 = nn.PReLU()
-        self.dconv4_a = nn.ConvTranspose2d(128, 1, kernel_size=6, stride=1, padding=1)
-        self.dconv4_b = nn.ConvTranspose2d(128, 1, kernel_size=6, stride=1, padding=1)
-        self.sig4_a = nn.Tanh()
-        self.sig4_b = nn.Tanh()
+        self.auxclas = config.auxclas
+        c_len = 0
+        if config.auxclas:
+            c_len = config.categories
 
-    def forward(self, z):
-        z = z.view(z.size(0), z.size(1), 1, 1)
-        h0 = self.prelu0(self.bn0(self.dconv0(z)))
+        self.dconv0 = Vector2FeatureMaps(config.z_len+c_len, config.g_dim*8, mode=config.g_first_layer)
+        self.bn0 = nn.BatchNorm2d(config.g_dim*8, affine=False)
+        self.prelu0 = nn.PReLU()
+        self.dconv1 = nn.ConvTranspose2d(config.g_dim*8, config.g_dim*4, kernel_size=3, stride=2, padding=1)
+        self.bn1 = nn.BatchNorm2d(config.g_dim*4, affine=False)
+        self.prelu1 = nn.PReLU()
+        self.dconv2 = nn.ConvTranspose2d(config.g_dim*4, config.g_dim*2, kernel_size=3, stride=2, padding=1)
+        self.bn2 = nn.BatchNorm2d(config.g_dim*2, affine=False)
+        self.prelu2 = nn.PReLU()
+        self.dconv3 = nn.ConvTranspose2d(config.g_dim*2, config.g_dim, kernel_size=3, stride=2, padding=1)
+        self.bn3 = nn.BatchNorm2d(config.g_dim, affine=False)
+        self.prelu3 = nn.PReLU()
+        self.dconv4_a = nn.ConvTranspose2d(config.g_dim, 1, kernel_size=6, stride=1, padding=1)
+        self.dconv4_b = nn.ConvTranspose2d(config.g_dim, 1, kernel_size=6, stride=1, padding=1)
+        self.sig4 = nn.Tanh()
+        
+
+    def singleForward(self, z, c=None):        
+        if self.auxclas:
+            inp = torch.cat((z, c), 1)
+        else:
+            inp = z
+
+        inp = inp.view(inp.size(0), inp.size(1), 1, 1)
+
+        h0 = self.prelu0(self.bn0(self.dconv0(inp)))
         h1 = self.prelu1(self.bn1(self.dconv1(h0)))
         h2 = self.prelu2(self.bn2(self.dconv2(h1)))
         h3 = self.prelu3(self.bn3(self.dconv3(h2)))
-        out_a = self.sig4_a(self.dconv4_a(h3))
-        out_b = self.sig4_b(self.dconv4_b(h3))
+        out = self.sig4(self.dconv4_a(h3))
+        return out
+        
+    def forward(self, z, c_a=None, c_b=None):
+        out_a = self.singleForward(z, c_a)
+        out_b = self.singleForward(z, c_b)
         return out_a, out_b

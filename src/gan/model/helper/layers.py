@@ -24,12 +24,12 @@ class Norm2d(nn.Module):
 
 
 class Vector2FeatureMaps(nn.Module):
-    def __init__(self, vec_len, feature_maps, mode, fm_dim=4):
+    def __init__(self, vec_len, feature_maps, mode, fm_dim=4, kernel_size=4):
         super(Vector2FeatureMaps, self).__init__()
         if mode == 'convtransposed':
             self.main = nn.Sequential(
                 Reshape(-1, vec_len, 1, 1),
-                nn.ConvTranspose2d(vec_len, feature_maps, 4, stride=1, padding=0)
+                nn.ConvTranspose2d(vec_len, feature_maps, kernel_size, stride=1, padding=0)
                 )
         elif mode == 'linear':
             self.main = nn.Sequential(
@@ -43,11 +43,11 @@ class Vector2FeatureMaps(nn.Module):
         return self.main(inp)
 
 class FeatureMaps2Vector(nn.Module):
-    def __init__(self, feature_maps, vec_len, mode, fm_dim=4):
+    def __init__(self, feature_maps, vec_len, mode, fm_dim=4, kernel_size=4):
         super(FeatureMaps2Vector, self).__init__()
         if mode == 'conv':
             self.main = nn.Sequential(
-                nn.Conv2d(feature_maps, vec_len, 4, stride=1, padding=0),
+                nn.Conv2d(feature_maps, vec_len, kernel_size, stride=1, padding=0),
                 Reshape(-1, vec_len)
                 )
         elif mode == 'linear':
