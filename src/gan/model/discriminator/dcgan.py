@@ -51,12 +51,12 @@ class Discriminator(nn.Module):
         s = self.predict_src(hidden)
         if self.auxclas:
             c = self.predict_class(hidden)
-            return s,c
-        return s
+            return (s,c)
+        return (s,)
 
     def forward(self, inp_a, inp_b=None):
         out_a = self.single_forward(inp_a, self.first_a)
         if not inp_b is None:
             out_b = self.single_forward(inp_b, self.first_b)
             return (out_a, out_b)
-        return out_a
+        return (out_a,)
