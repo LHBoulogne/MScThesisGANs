@@ -73,7 +73,7 @@ class GAN():
         trainer.save_error()
         if self.config.visualize_training:
             imgsaver.save_training_imgs(epoch, batch, self.G)
-            errorplot.save_error_plots(trainer.error_dicts, self.config)
+            errorplot.save_error_plots(trainer.get_error_storage(), self.config)
         self.save()
 
 
@@ -90,7 +90,11 @@ class GAN():
 
         while epoch < self.config.epochs:
             print("Epoch: "+str(epoch+1)+ "/" + str(self.config.epochs) + ' '*10)
+
             for batch, data in enumerate(dataloader) :
+                if batch%self.config.snap_step == 0:
+                    self.make_snapshot(epoch, batch+1, trainer, imgsaver)
+                
                 print("\rBatch " + str(batch), end='\r')
                 
                 trainer.next_step(data)
@@ -102,11 +106,8 @@ class GAN():
                     steps_without_G_update = 0
                     for it in range(self.config.G_updates):
                         trainer.update_generator(self.G, self.D)
-                
-                if batch%self.config.snap_step == 0:
-                    self.make_snapshot(epoch, batch, trainer, imgsaver)
 
-            self.make_snapshot(epoch, batch, trainer, imgsaver)
+            self.make_snapshot(epoch, batch+1, trainer, imgsaver)
             epoch += 1
 
 

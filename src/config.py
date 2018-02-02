@@ -60,6 +60,9 @@ def parse_args() :
     # Class vector
     parser.add_argument('--c_len', type=int, default=10)
 
+    #### Trainer params ####
+    parser.add_argument('--algorithm', type=str, default='default')
+
     #### Model params ####
     parser.add_argument('--imsize', type=int, default=64)
     parser.add_argument('--imgch', type=int, default=1)

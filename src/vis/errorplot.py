@@ -1,7 +1,6 @@
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-import copy
 import warnings
 import os
 
@@ -12,13 +11,12 @@ def prepared_error_dict(error_dict, config):
             RuntimeWarning
         )
 
-    error_dict = copy.deepcopy(error_dict)
     if config.combine_sc:
         collapse_source_class(error_dict)
-    if config.combine_rf or (config.combine_gd and config.k == 1): 
+    if config.algorithm == 'default' and config.k == 1 and  (config.combine_rf or config.combine_gd): 
         dicts = [error_dict['D']['real'], error_dict['D']['fake']]
         error_dict['D'] = combine_dicts(dicts)
-    if config.combine_gd and config.k == 1:
+    if config.k == 1 and config.combine_gd:
         dicts = [error_dict['D'], error_dict['G']]
         error_dict = combine_dicts(dicts)
     return error_dict
@@ -75,7 +73,8 @@ def combine_dicts(error_dicts):
         return_dict[key] = combine_dicts(dicts)
     return return_dict
 
-def save_error_plots(error_dicts, config):
+def save_error_plots(error_storage, config):
+    error_dicts = error_storage.get_error_dicts()
     if not config.combine_GANs:
         for nr, error_dict in enumerate(error_dicts):
             save_error_plot(error_dict, config, nr)
