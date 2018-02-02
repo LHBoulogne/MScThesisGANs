@@ -170,7 +170,7 @@ class GANTrainer():
         separate_errors = ()
         error = 0
         for idx in range(len(out_fake)):
-            err = out_fake[idx][0].mean() - out_real[idx][0].mean() + gps[idx]
+            err = out_fake[idx][0].mean() - out_real[idx][0].mean() + config.gp_coef*gps[idx]
             separate_errors += (err,)
             error += err
 

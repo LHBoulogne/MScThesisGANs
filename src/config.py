@@ -62,6 +62,7 @@ def parse_args() :
 
     #### Trainer params ####
     parser.add_argument('--algorithm', type=str, default='default')
+    parser.add_argument('--gp_coef', type=int, default=10)
 
     #### Model params ####
     parser.add_argument('--imsize', type=int, default=64)
