@@ -144,7 +144,7 @@ class GANTrainer():
     def grad_penalty(self, inp_real, inp_fake, D):
         inp_hat = ()
         for idx in range(len(inp_fake)):
-            e = torch.rand(self.config.mini_batch_size, 1,1,1)
+            e = torch.rand(self.this_batch_size, 1,1,1)
             x = inp_real[idx].data
             x_wave = inp_fake[idx].data
 
@@ -158,7 +158,7 @@ class GANTrainer():
             gradient = grad(out_hat[idx][0], inp_hat[idx],
                 grad_outputs = torch.ones(out_hat[idx][0].size()), 
                 create_graph = True)[0]
-            gradient = gradient.view(self.config.mini_batch_size, -1)
+            gradient = gradient.view(self.this_batch_size, -1)
             gp = ((gradient.norm(p=2, dim=1) - 1)**2).mean()
             gps += (gp,)
             
