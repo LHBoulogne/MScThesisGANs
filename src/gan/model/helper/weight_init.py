@@ -12,9 +12,10 @@ def normal_init(m):
     if hasattr(m, 'weight'):
         if isinstance(m, nn.BatchNorm2d):
             m.weight.data.normal_(1, 0.02)
-        else :
+        elif not isinstance(m, nn.InstanceNorm2d): #instance norm weight is None
             m.weight.data.normal_(0, 0.02)
-        m.bias.data.zero_()
+        if not isinstance(m, nn.InstanceNorm2d):
+            m.bias.data.zero_()
     else:
         for mod in m._modules:
             normal_init(m._modules[mod])
