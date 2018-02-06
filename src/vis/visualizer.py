@@ -9,6 +9,8 @@ from torch.autograd import Variable
 from gan.aux.sample import sample_z
 from gan.aux.aux import to_one_hot
 
+import utils
+
 class Visualizer() :
     def __init__(self, dataset, config):
         self.config = config
@@ -34,11 +36,11 @@ class Visualizer() :
             
 
         #construct input
-        self.generator_input = (Variable(z),)
+        self.generator_input = (utils.cuda(Variable(z)),)
         if config.auxclas:
-            self.generator_input += (Variable(one_hot),)
+            self.generator_input += (utils.cuda(Variable(one_hot)),)
             if config.coupled:
-                self.generator_input += (Variable(one_hot),)
+                self.generator_input += (utils.cuda(Variable(one_hot)),)
             
 
     def output_to_img(self, output):
