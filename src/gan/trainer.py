@@ -61,7 +61,7 @@ class GANTrainer():
 
     def cuda(self):
         variables = [attr for attr in self.__dict__.keys() if type(self.__dict__[attr]) == Variable]
-        
+
         for v in variables:
             self.__dict__[v] = utils.cuda(self.__dict__[v])
 
@@ -124,7 +124,7 @@ class GANTrainer():
         if self.config.auxclas: #for conditional input
             (verdict, class_probs) = d_out
         else :
-            verdict = d_out
+            (verdict,) = d_out
 
         source_error = self.s_criterion(verdict.view(-1), y_v)
         if self.config.auxclas: # add loss for class_criterion() prediction
