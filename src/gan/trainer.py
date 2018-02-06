@@ -9,6 +9,7 @@ import numpy as np
 from gan.aux.aux import to_one_hot
 from gan.aux.sample import sample_generator_input
 from gan.errorstorage import *
+import utils
 
 class GANTrainer():
     def __init__(self, config, G, D):
@@ -56,6 +57,12 @@ class GANTrainer():
         self.c_criterion = nn.CrossEntropyLoss() #Includes the softmax function
         self.g_opt = optim.Adam(G.parameters(), lr=config.g_lr, betas=(config.g_b1, config.g_b2), weight_decay=config.g_weight_decay)
         self.d_opt = optim.Adam(D.parameters(), lr=config.d_lr, betas=(config.d_b1, config.d_b2), weight_decay=config.d_weight_decay)
+        self.cuda()
+
+    def cuda(self):
+        variables = [attr for attr in dir(self) if type(attr) == Variable]
+        for v in variables:
+            utils.cuda(v)
 
 
     def resize_vars(self):
@@ -144,19 +151,20 @@ class GANTrainer():
     def grad_penalty(self, inp_real, inp_fake, D):
         inp_hat = ()
         for idx in range(len(inp_fake)):
-            e = torch.rand(self.this_batch_size, 1,1,1)
+            e = utils.cuda(torch.rand(self.this_batch_size, 1,1,1))
+
             x = inp_real[idx].data
             x_wave = inp_fake[idx].data
 
             x_hat = e*x + (1-e)*x_wave
-            inp_hat += (Variable(x_hat, requires_grad=True),)
+            inp_hat += (utils.cuda(Variable(x_hat, requires_grad=True)),)
 
         out_hat = D(*inp_hat)
 
         gps = ()
         for idx in range(len(out_hat)):
             gradient = grad(out_hat[idx][0], inp_hat[idx],
-                grad_outputs = torch.ones(out_hat[idx][0].size()), 
+                grad_outputs = utils.cuda(torch.ones(out_hat[idx][0].size())), 
                 create_graph = True)[0]
             gradient = gradient.view(self.this_batch_size, -1)
             gp = ((gradient.norm(p=2, dim=1) - 1)**2).mean()

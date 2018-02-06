@@ -1,4 +1,5 @@
 import sys
+import os
 
 from data.celeba_coupled import *
 from data.mnistedge import *
@@ -9,7 +10,7 @@ from vis import errorplot
 
 from gan.trainer import *
 from gan.aux.aux import rescale
-import os
+import utils
 
 class GAN():
     def __init__(self, config):
@@ -24,12 +25,14 @@ class GAN():
         __import__(module_name, fromlist=["*"])
         mod = sys.modules[module_name]
         self.G = mod.Generator(self.config)
+        utils.cuda(self.G)
 
     def init_discriminator(self):
         module_name = "gan.model.discriminator." + self.config.discriminator
         __import__(module_name, fromlist=["*"])
         mod = sys.modules[module_name]
         self.D = mod.Discriminator(self.config)
+        utils.cuda(self.D)
     
     def save(self):
         torch.save(self.G.state_dict(), os.path.join(self.config.savefolder, 'generator.h5'))
