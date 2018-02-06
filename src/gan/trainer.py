@@ -60,9 +60,10 @@ class GANTrainer():
         self.cuda()
 
     def cuda(self):
-        variables = [attr for attr in dir(self) if type(attr) == Variable]
+        variables = [attr for attr in self.__dict__.keys() if type(self.__dict__[attr]) == Variable]
+        
         for v in variables:
-            v = utils.cuda(v)
+            self.__dict__[v] = utils.cuda(self.__dict__[v])
 
 
     def resize_vars(self):
