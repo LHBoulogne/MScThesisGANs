@@ -10,11 +10,12 @@ def weight_init(model, mode):
 
 def normal_init(m):
     if hasattr(m, 'weight'):
-        if isinstance(m, nn.BatchNorm2d):
-            m.weight.data.normal_(1, 0.02)
-        elif not isinstance(m, nn.InstanceNorm2d): #instance norm weight is None
+#        if isinstance(m, nn.BatchNorm2d):
+#            m.weight.data.normal_(1, 0.02)
+#        elif not
+        if not isinstance(m, nn.InstanceNorm2d) and not isinstance(m, nn.BatchNorm2d): #instance norm weight is None
             m.weight.data.normal_(0, 0.02)
-        if not isinstance(m, nn.InstanceNorm2d):
+        #if not isinstance(m, nn.InstanceNorm2d):
             m.bias.data.zero_()
     else:
         for mod in m._modules:
