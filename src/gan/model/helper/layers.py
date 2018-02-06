@@ -1,5 +1,11 @@
 import torch.nn as nn
 
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+    def forward(self, inp):
+        return inp
+
 class Reshape(nn.Module):
     def __init__(self, *shape):
         super(Reshape, self).__init__()
@@ -16,6 +22,8 @@ class Norm2d(nn.Module):
             self.main = nn.BatchNorm2d(dim)
         elif mode == 'instance':
             self.main = nn.InstanceNorm2d(dim)
+        elif mode == 'none':
+            self.main = Identity()
         else :
             raise RuntimeError('norm argument has unknown value: ' + mode)
 

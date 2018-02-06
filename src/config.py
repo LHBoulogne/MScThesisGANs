@@ -86,6 +86,7 @@ def parse_args() :
     parser.add_argument('--g_weight_decay', type=float, default=0.0)
     parser.add_argument('--g_extra_conv', type=str2bool, default=False)
     parser.add_argument('--g_first_layer', type=str, default='convtransposed')
+    parser.add_argument('--g_norm', type=str, default=None) #takes value of --norm if None
     
     # Discriminator
     parser.add_argument('--discriminator', type=str, default='dcgan')
@@ -95,12 +96,18 @@ def parse_args() :
     parser.add_argument('--d_b2', type=float, default=0.999)
     parser.add_argument('--d_weight_decay', type=float, default=0.0)
     parser.add_argument('--d_last_layer', type=str, default='conv')
+    parser.add_argument('--d_norm', type=str, default=None) #takes value of --norm if None
 
     parser.add_argument('--weight_decay', type=float, default=0.0)
     config = parser.parse_args()
 
     config.d_weight_decay = config.weight_decay
     config.g_weight_decay = config.weight_decay
+    
+    if config.d_norm is None:
+        config.d_norm = config.norm
+    if config.g_norm is None:
+        config.g_norm = config.norm
 
     config.savefolder = os.path.join('../savedata/', config.savefolder)
     config.loadfolder = os.path.join('../savedata/', config.loadfolder)

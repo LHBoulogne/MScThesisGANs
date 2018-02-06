@@ -10,14 +10,14 @@ class Discriminator(nn.Module):
 
         self.first_a = nn.Sequential(
             nn.Conv2d(config.imgch, config.d_dim, 4, stride=2, padding=1),
-            Norm2d(config.d_dim, config.norm),
+            Norm2d(config.d_dim, config.d_norm),
             nn.LeakyReLU(0.2)
         )
         
         if config.coupled:
             self.first_b = nn.Sequential(
                 nn.Conv2d(config.imgch, config.d_dim, 4, stride=2, padding=1),
-                Norm2d(config.d_dim, config.norm),
+                Norm2d(config.d_dim, config.d_norm),
                 nn.LeakyReLU(0.2)
             )
         
@@ -26,7 +26,7 @@ class Discriminator(nn.Module):
             mult = 2**it
             layers += (
                 nn.Conv2d(config.d_dim*mult,  config.d_dim*mult*2, 4, stride=2, padding=1),
-                Norm2d(config.d_dim*mult*2, config.norm),
+                Norm2d(config.d_dim*mult*2, config.d_norm),
                 nn.LeakyReLU(0.2)
                 )
 
