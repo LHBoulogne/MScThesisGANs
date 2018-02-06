@@ -79,10 +79,10 @@ class Visualizer() :
     def save_training_imgs(self, epoch, batch, G):
         fake = G(*self.generator_input)
         if self.config.coupled:
-            self.save_training_img(fake[0].data.numpy(), epoch, batch, 0) 
-            self.save_training_img(fake[1].data.numpy(), epoch, batch, 1) 
+            self.save_training_img(fake[0].data.cpu().numpy(), epoch, batch, 0) 
+            self.save_training_img(fake[1].data.cpu().numpy(), epoch, batch, 1) 
         else:
-            self.save_training_img(fake[0].data.numpy(), epoch, batch) 
+            self.save_training_img(fake[0].data.cpu().numpy(), epoch, batch) 
 
     def save_test_img(self, output, nr=None):
         save_name = 'test'
@@ -98,7 +98,7 @@ class Visualizer() :
     def save_test_imgs(self, G):
         fake = G(*self.generator_input)
         if self.config.coupled:
-            self.save_test_img(fake[0].data.numpy(), 0) 
-            self.save_test_img(fake[1].data.numpy(), 1) 
+            self.save_test_img(fake[0].data.cpu().numpy(), 0) 
+            self.save_test_img(fake[1].data.cpu().numpy(), 1) 
         else:
-            self.save_test_img(fake[0].data.numpy()) 
+            self.save_test_img(fake[0].data.cpu().numpy()) 

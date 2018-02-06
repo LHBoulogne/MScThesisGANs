@@ -54,7 +54,7 @@ class ErrorStorage():
         keys = ['source', 'classification']
         for it, error in enumerate(errors):
             key = keys[it]
-            error_list[key] += [error.data.numpy()]
+            error_list[key] += [error.data.cpu().numpy()]
 
     def store_errors1(self, model, error_fake, error_real, d):
         if model == 'generator':
