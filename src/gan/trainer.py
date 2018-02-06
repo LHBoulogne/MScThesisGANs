@@ -124,8 +124,7 @@ class GANTrainer():
         if self.config.auxclas: #for conditional input
             (verdict, class_probs) = d_out
         else :
-            (verdict,) = d_out
-
+            verdict = d_out[0]
         source_error = self.s_criterion(verdict.view(-1), y_v)
         if self.config.auxclas: # add loss for class_criterion() prediction
             classification_error = self.c_criterion(class_probs, c_v) * self.config.c_error_weight
@@ -145,7 +144,7 @@ class GANTrainer():
             separate_b = self.compute_error_single_GAN(d_out[1], y_v, c2_v)
             total = sum(separate_a) + sum(separate_b)
             return (total, (separate_a, separate_b))
-        separate = self.compute_error_single_GAN(d_out, y_v, c1_v)
+        separate = self.compute_error_single_GAN(d_out[0], y_v, c1_v)
         total = sum(separate)
         return (total, (separate,))
 
