@@ -252,8 +252,8 @@ class GANTrainer():
             error, separate_errors = self.compute_error_GAN(d_out, self.y_real_v, self.c_fake1_v, self.c_fake2_v)
         else :
             raise RuntimeError('Algorithm not implemented: ' + self.config.algorithm)
-        
+
         sum(error).backward()
-        self.error_storage.store_errors('generator', separate_errors)
         self.g_opt.step()
+        self.error_storage.store_errors('generator', separate_errors)
         

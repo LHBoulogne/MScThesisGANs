@@ -68,8 +68,13 @@ def parse_args() :
     parser.add_argument('--imsize', type=int, default=64)
     parser.add_argument('--imgch', type=int, default=1)
     parser.add_argument('--weight_init', type=str, default='normal')
-    parser.add_argument('--norm', type=str, default='batch')
     parser.add_argument('--blocks', type=int, default=3)
+
+    parser.add_argument('--norm', type=str, default='batch')
+    parser.add_argument('--lr', type=float, default=0.0002)
+    parser.add_argument('--b1', type=float, default=0.5)
+    parser.add_argument('--b2', type=float, default=0.999)
+
 
     # auxclass
     parser.add_argument('--categories', type=int, default=10)
@@ -80,9 +85,9 @@ def parse_args() :
     parser.add_argument('--z_len', type=int, default=100)
     parser.add_argument('--z_distribution', type=str, default='uniform')
     parser.add_argument('--g_dim', type=int, default=64)
-    parser.add_argument('--g_lr', type=float, default=0.0002)
-    parser.add_argument('--g_b1', type=float, default=0.5)
-    parser.add_argument('--g_b2', type=float, default=0.999)
+    parser.add_argument('--g_lr', type=float, default=None)
+    parser.add_argument('--g_b1', type=float, default=None)
+    parser.add_argument('--g_b2', type=float, default=None)
     parser.add_argument('--g_weight_decay', type=float, default=0.0)
     parser.add_argument('--g_extra_conv', type=str2bool, default=False)
     parser.add_argument('--g_first_layer', type=str, default='convtransposed')
@@ -91,9 +96,9 @@ def parse_args() :
     # Discriminator
     parser.add_argument('--discriminator', type=str, default='dcgan')
     parser.add_argument('--d_dim', type=int, default=64)
-    parser.add_argument('--d_lr', type=float, default=0.0002)
-    parser.add_argument('--d_b1', type=float, default=0.5)
-    parser.add_argument('--d_b2', type=float, default=0.999)
+    parser.add_argument('--d_lr', type=float, default=None)
+    parser.add_argument('--d_b1', type=float, default=None)
+    parser.add_argument('--d_b2', type=float, default=None)
     parser.add_argument('--d_weight_decay', type=float, default=0.0)
     parser.add_argument('--d_last_layer', type=str, default='conv')
     parser.add_argument('--d_norm', type=str, default=None) #takes value of --norm if None
@@ -108,6 +113,22 @@ def parse_args() :
         config.d_norm = config.norm
     if config.g_norm is None:
         config.g_norm = config.norm
+
+
+    if config.d_lr is None:
+        config.d_lr = config.lr
+    if config.g_lr is None:
+        config.g_lr = config.lr
+
+    if config.d_b1 is None:
+        config.d_b1 = config.b1
+    if config.g_b1 is None:
+        config.g_b1 = config.b1
+
+    if config.d_b2 is None:
+        config.d_b2 = config.b2
+    if config.g_b2 is None:
+        config.g_b2 = config.b2
 
     config.savefolder = os.path.join('../savedata/', config.savefolder)
     config.loadfolder = os.path.join('../savedata/', config.loadfolder)
