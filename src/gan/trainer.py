@@ -57,8 +57,9 @@ class GANTrainer():
         self.c_criterion = nn.CrossEntropyLoss() #Includes the softmax function
         self.g_opt = optim.Adam(G.parameters(), lr=config.g_lr, betas=(config.g_b1, config.g_b2), weight_decay=config.g_weight_decay)
         self.d_opt = optim.Adam(D.parameters(), lr=config.d_lr, betas=(config.d_b1, config.d_b2), weight_decay=config.d_weight_decay)
+        
         self.cuda()
-
+        
     def cuda(self):
         variables = [attr for attr in self.__dict__.keys() if type(self.__dict__[attr]) == Variable]
 
@@ -96,6 +97,14 @@ class GANTrainer():
                 #set c_real Variable to contain the class conditional vector as input
                 self.c_real1 = Variable(c1_data)
             self.x1_real = Variable(x1_data)
+
+        print('\n\n\n\n\nafter copying:')
+        print('x1_data:')
+        print(x1_data)
+        print('x1_real:')
+        print(self.x1_real)
+        print('x1_real_v:')
+        print(self.x1_real_v)
 
         # resize Variables to correct capacity
         self.this_batch_size = x1_data.size(0)
@@ -204,6 +213,7 @@ class GANTrainer():
             self.z_v, 
             self.c_fake_one_hot1_v, self.c_fake_one_hot2_v, 
             self.c_fake1, self.c_fake2)
+        
         g_out = G(*g_inp)
         d_inp_fake = self.detach(g_out) #makes sure that the backward pass will stop at generator output
         
@@ -213,7 +223,7 @@ class GANTrainer():
 
         d_out_fake = D(*d_inp_fake)
         d_out_real = D(*d_inp_real)
-
+        
         if self.config.algorithm == 'wgan_gp':
             error, separate_errors = self.compute_D_error_WGAN_gp(d_inp_real, d_inp_fake, d_out_real, d_out_fake, D)
             error.backward()
@@ -228,7 +238,7 @@ class GANTrainer():
 
             error_fake, separate_errors_fake = self.compute_error_GAN(d_out_fake, self.y_fake_v, self.c_fake1_v, self.c_fake2_v)
             error_fake.backward()
-            
+                        
             self.d_opt.step()
             self.error_storage.store_errors('discriminator', separate_errors_fake, separate_errors_real)
         else :
@@ -244,7 +254,7 @@ class GANTrainer():
             self.c_fake1, self.c_fake2)
         g_out = G(*g_inp)
         d_out = D(*g_out)
-        
+
         # perform backward pass and update
         if self.config.algorithm == 'wgan_gp':
             error, separate_errors = self.compute_G_error_WGAN_gp(d_out)

@@ -53,6 +53,7 @@ class Generator(nn.Module):
         return last
 
     def forward(self, z, c_a=None, c_b=None): #for accogans and cogans
+        print('WWWWWWWWW  GENERATOR WWWWWWWWW')
         if self.auxclas:
             inp_a = torch.cat((z, c_a), 1)
             if self.coupled:
@@ -61,10 +62,19 @@ class Generator(nn.Module):
             inp_a = z
             if self.coupled:
                 inp_b = z
+        print(type(z))
+        print(z)
 
         features_a = self.main(inp_a)
+
+        print(type(features_a))
+        print(features_a)
+
         out_a = self.last_a(features_a)
 
+        print(type(out_a))
+        print(out_a)
+        
         if self.coupled:
             features_b = self.main(inp_b)
             out_b = self.last_b(features_b)

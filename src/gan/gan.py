@@ -96,9 +96,9 @@ class GAN():
 
             for batch, data in enumerate(dataloader) :
                 if batch%self.config.snap_step == 0:
-                    self.make_snapshot(epoch, batch+1, trainer, imgsaver)
+                    self.make_snapshot(epoch, batch, trainer, imgsaver)
                 
-                print("\rBatch " + str(batch), end='\r')
+                print("\rBatch " + str(batch))
                 
                 trainer.next_step(data)
                 trainer.update_discriminator(self.G, self.D)
