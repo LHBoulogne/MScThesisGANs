@@ -99,7 +99,7 @@ class GANTrainer():
                 self.c_real1_v = Variable(c1_data)
             self.x1_real_v = Variable(x1_data)
 
-        self.this_batch_size = self.config.mini_batch_size
+        self.this_batch_size = x1_data.size(0)
         if self.config.mini_batch_size != self.this_batch_size:
             print('batch size is off: ' + str(self.this_batch_size))
 
