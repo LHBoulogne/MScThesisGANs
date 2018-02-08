@@ -208,10 +208,7 @@ class GANTrainer():
 
         # forward pass
           #for fake data
-        g_inp = sample_generator_input(self.config, self.this_batch_size, 
-            self.z_v, 
-            self.c_fake_one_hot1_v, self.c_fake_one_hot2_v, 
-            self.c_fake1, self.c_fake2)
+        g_inp, self.c_fake1_v, self.c_fake2_v = sample_generator_input(self.config, self.this_batch_size, self.z_v)
         
         g_out = G(*g_inp)
         d_inp_fake = self.detach(g_out) #makes sure that the backward pass will stop at generator output
@@ -252,10 +249,7 @@ class GANTrainer():
         
         # forward pass
         G.zero_grad()
-        g_inp = sample_generator_input(self.config, self.this_batch_size, 
-            self.z_v, 
-            self.c_fake_one_hot1_v, self.c_fake_one_hot2_v, 
-            self.c_fake1, self.c_fake2)
+        g_inp, self.c_fake1_v, self.c_fake2_v = sample_generator_input(self.config, self.this_batch_size, self.z_v)
         g_out = G(*g_inp)
         d_out = D(*g_out)
 
