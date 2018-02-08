@@ -27,8 +27,10 @@ class GANTrainer():
         self.x2_real_v = Variable(self.x2_real)
         
         self.y_real = torch.FloatTensor(config.mini_batch_size)
+        self.y_real.fill_(self.prob_data_is_real) ###\TODO :: put this in __init__
         self.y_real_v = Variable(self.y_real)
         self.y_fake = torch.FloatTensor(config.mini_batch_size)
+        self.y_fake.fill_(0.0)
         self.y_fake_v = Variable(self.y_fake)
 
         self.z = torch.FloatTensor(config.mini_batch_size, config.z_len)
@@ -67,20 +69,19 @@ class GANTrainer():
             self.__dict__[v] = utils.cuda(self.__dict__[v])
 
 
-    def resize_vars(self):
-        #resize Variables accordingly
-        self.y_real.resize_(self.this_batch_size)
-        self.y_fake.resize_(self.this_batch_size)
-        
-        self.z.resize_(self.this_batch_size, self.config.z_len)
+#    def resize_vars(self):
+#        #resize Variables accordingly
+#        self.y_real.resize_(self.this_batch_size)
+#        self.y_fake.resize_(self.this_batch_size)
+#        
+#        self.z.resize_(self.this_batch_size, self.config.z_len)
+#
+#        self.c_fake1.resize_(self.this_batch_size)
+#        self.c_fake2.resize_(self.this_batch_size)
+#        self.c_fake_one_hot1.resize_(self.this_batch_size, self.config.categories)
+#        self.c_fake_one_hot2.resize_(self.this_batch_size, self.config.categories)
 
-        self.c_fake1.resize_(self.this_batch_size)
-        self.c_fake2.resize_(self.this_batch_size)
-        self.c_fake_one_hot1.resize_(self.this_batch_size, self.config.categories)
-        self.c_fake_one_hot2.resize_(self.this_batch_size, self.config.categories)
-            
-
-    #loads the 'real' data into its torch.autograd Variables
+#loads the 'real' data into its torch.autograd Variables
     def next_step(self, data): 
         #put data into Variables
         if self.config.coupled:
@@ -98,21 +99,16 @@ class GANTrainer():
                 self.c_real1_v = Variable(c1_data)
             self.x1_real_v = Variable(x1_data)
 
-        print('\n\n\n\n\nafter copying:')
-        print('x1_data:')
-        print(x1_data)
-        print('x1_real:')
-        print(self.x1_real)
-        print('x1_real_v:')
-        print(self.x1_real_v)
+        self.this_batch_size = self.config.mini_batch_size
+        if self.config.mini_batch_size != self.this_batch_size:
+            print('batch size is off: ' + str(self.this_batch_size))
 
+
+        '''
         # resize Variables to correct capacity
-        self.this_batch_size = x1_data.size(0)
         self.resize_vars()
-
+        '''
         # fill real/fake label Variables
-        self.y_real.fill_(self.prob_data_is_real)
-        self.y_fake.fill_(0.0)
 
     def get_error_storage(self):
         return self.error_storage
@@ -205,6 +201,9 @@ class GANTrainer():
     
 
     def update_discriminator(self, G, D):
+        if self.config.mini_batch_size != self.this_batch_size:
+            return False
+
         D.zero_grad()
 
         # forward pass
@@ -244,8 +243,13 @@ class GANTrainer():
         else :
             raise RuntimeError('Algorithm not implemented: ' + self.config.algorithm)
 
+        return True
+
 
     def update_generator(self, G, D):
+        if self.config.mini_batch_size != self.this_batch_size:
+            return False
+        
         # forward pass
         G.zero_grad()
         g_inp = sample_generator_input(self.config, self.this_batch_size, 
@@ -267,3 +271,4 @@ class GANTrainer():
         self.g_opt.step()
         self.error_storage.store_errors('generator', separate_errors)
         
+        return True

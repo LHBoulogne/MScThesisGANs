@@ -101,14 +101,17 @@ class GAN():
                 print("\rBatch " + str(batch))
                 
                 trainer.next_step(data)
-                trainer.update_discriminator(self.G, self.D)
 
+                if trainer.update_discriminator(self.G, self.D):
+                    steps_without_G_update += 1
                 #Allow for multiple updates of D with respect to G
-                steps_without_G_update += 1
+                
                 if steps_without_G_update >= self.config.k: 
                     steps_without_G_update = 0
                     for it in range(self.config.G_updates):
-                        trainer.update_generator(self.G, self.D)
+                        g_updated = False
+                        while not g_updated:
+                            g_updated = trainer.update_generator(self.G, self.D)
 
             self.make_snapshot(epoch, batch+1, trainer, imgsaver)
             epoch += 1
