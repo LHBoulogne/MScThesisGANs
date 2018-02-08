@@ -86,17 +86,17 @@ class GANTrainer():
         if self.config.coupled:
             x1_data, x2_data, c1_data, c2_data = utils.cuda(data) #read out data tuple
             if self.config.auxclas:
-                self.c_real1 = Variable(c1_data)
-                self.c_real2 = Variable(c2_data)
-            self.x1_real = Variable(x1_data)
-            self.x2_real = Variable(x2_data)
+                self.c_real1_v = Variable(c1_data)
+                self.c_real2_v = Variable(c2_data)
+            self.x1_real_v = Variable(x1_data)
+            self.x2_real_v = Variable(x2_data)
             
         else :
             x1_data, c1_data = utils.cuda(data) #read out data tuple
             if self.config.auxclas:
                 #set c_real Variable to contain the class conditional vector as input
-                self.c_real1 = Variable(c1_data)
-            self.x1_real = Variable(x1_data)
+                self.c_real1_v = Variable(c1_data)
+            self.x1_real_v = Variable(x1_data)
 
         print('\n\n\n\n\nafter copying:')
         print('x1_data:')
