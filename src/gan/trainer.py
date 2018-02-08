@@ -83,19 +83,19 @@ class GANTrainer():
     def next_step(self, data): 
         #put data into Variables
         if self.config.coupled:
-            x1_data, x2_data, c1_data, c2_data = data #read out data tuple
+            x1_data, x2_data, c1_data, c2_data = utils.cuda(data) #read out data tuple
             if self.config.auxclas:
-                self.c_real1.resize_as_(c1_data).copy_(c1_data)
-                self.c_real2.resize_as_(c2_data).copy_(c2_data)
-            self.x1_real.resize_as_(x1_data).copy_(x1_data)
-            self.x2_real.resize_as_(x2_data).copy_(x2_data)
+                self.c_real1 = Variable(c1_data)
+                self.c_real2 = Variable(c2_data)
+            self.x1_real = Variable(x1_data)
+            self.x2_real = Variable(x2_data)
             
         else :
-            x1_data, c1_data = data #read out data tuple
+            x1_data, c1_data = utils.cuda(data) #read out data tuple
             if self.config.auxclas:
                 #set c_real Variable to contain the class conditional vector as input
-                self.c_real1.resize_as_(c1_data).copy_(c1_data)
-            self.x1_real.resize_as_(x1_data).copy_(x1_data)
+                self.c_real1 = Variable(c1_data)
+            self.x1_real = Variable(x1_data)
 
         # resize Variables to correct capacity
         self.this_batch_size = x1_data.size(0)
