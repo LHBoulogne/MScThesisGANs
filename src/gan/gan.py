@@ -51,7 +51,7 @@ class GAN():
                                                transforms.ToTensor(),
                                                transforms.Lambda(rescale)]))
             elif self.config.dataname == "CelebA":
-                dataset = CelebA_dataset_coupled(colabelname=self.config.colabelname, 
+                dataset = CelebA_dataset_coupled(config=self.config, 
                       root='../data/celeba/', 
                       transform=transforms.Compose([transforms.CenterCrop(self.config.cropsize),
                                                     transforms.Scale((self.config.imsize,self.config.imsize)),
