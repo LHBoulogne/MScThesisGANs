@@ -45,10 +45,11 @@ class Generator(nn.Module):
         h1 = self.prelu1(self.bn1(self.dconv1(h0)))
         h2 = self.prelu2(self.bn2(self.dconv2(h1)))
         h3 = self.prelu3(self.bn3(self.dconv3(h2)))
-        out = self.sig4(self.dconv4_a(h3))
-        return out
+        return h3
         
     def forward(self, z, c_a=None, c_b=None):
-        out_a = self.singleForward(z, c_a)
-        out_b = self.singleForward(z, c_b)
+        h3_a = self.singleForward(z, c_a)
+        h3_b = self.singleForward(z, c_b)
+        out_a = self.sig4(self.dconv4_a(h3_a))
+        out_b = self.sig4(self.dconv4_b(h3_b))
         return out_a, out_b
