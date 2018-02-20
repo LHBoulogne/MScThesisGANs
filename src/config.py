@@ -136,6 +136,10 @@ def parse_args() :
         config.labels1 = []
     if config.labels2 == ["None"]:
         config.labels2 = []
+    if config.labels1_neg == ["None"]:
+        config.labels1_neg = []
+    if config.labels2_neg == ["None"]:
+        config.labels2_neg = []
 
     if config.dataname == "MNIST":
         config.labels1 = [int(label) for label in config.labels1]

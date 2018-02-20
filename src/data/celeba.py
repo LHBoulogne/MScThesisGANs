@@ -41,17 +41,20 @@ class CelebA_dataset(torch.utils.data.Dataset):
         return len(self.valid_idcs)
 
     def get_random_labelbatch(self, batch_size):
+        np.random.seed()
         ys = []
         for it in range(batch_size):
-            ys += [self.get_y(np.random.randint(len(self))).unsqueeze(0)]
+            idx = np.random.randint(len(self))
+            idx2 = self.valid_idcs[idx]
+            ys += [self.get_y(idx2).unsqueeze(0)]
         return torch.cat(ys, 0)
 
     def get_y(self, idx):
         return torch.FloatTensor(self.labels[idx])
 
     def __getitem__(self, idx):
-        i = self.valid_idcs[idx]
-        return self.img_dataset[i][0], self.get_y(i)
+        idx2 = self.valid_idcs[idx]
+        return self.img_dataset[idx2][0], self.get_y(idx2)
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
