@@ -15,31 +15,39 @@ def sample_z(z_distribution, z):
     else :
         raise RuntimeError('z_distribution argument has unknown value: ' + z_distribution)
 
+def sample_c(config, dataset):
+    if config.dataname == "MNIST":
+        return sample_multi_c(config)
+    if config.dataname == "CelebA":
+        return dataset.get_random_labelbatch(config.mini_batch_size)
 
-def sample_c(batch_size, labels) :
+def sample_multi_c(config):
+    c1 = sample_multi_c_helper(config.mini_batch_size, config.labels1)
+    if config.coupled: 
+        c2 = sample_multi_c_helper(config.mini_batch_size, config.labels2)
+        return (c1, c2)
+    return c1
+
+def sample_multi_c_helper(batch_size, labels) :
     idcs = np.random.randint(len(labels), size=(batch_size,))
     rands = np.array([labels[i] for i in idcs])
     rands = torch.from_numpy(rands)
     return rands
 
-
 # also puts class vector for error computation in c_fake1 and c_fake2 if specified
-def sample_generator_input(config, this_batch_size, z_v):
-    c_fake1_v=None
-    c_fake2_v=None
-
-    sample_z(config.z_distribution, z_v.data)
-    g_inp = (z_v,)
+def sample_generator_input(config, this_batch_size, z, c_fake1=None, c_fake2=None):
+    sample_z(config.z_distribution, z.data)
+    g_inp = (z,)
     if config.auxclas: #for conditional input
-        c_fake_tmp1 = sample_c(this_batch_size, config.labels1)
-        c_fake1_v = Variable(utils.cuda(c_fake_tmp1))
-        c_fake_one_hot1_v = Variable(utils.cuda(to_one_hot(config.categories, c_fake_tmp1)))
-        g_inp += (c_fake_one_hot1_v,) 
-        
-        if config.coupled:
-            c_fake_tmp2 = sample_c(this_batch_size, config.labels2)
-            c_fake2_v = Variable(utils.cuda(c_fake_tmp2))
-            c_fake_one_hot2_v = Variable(utils.cuda(to_one_hot(config.categories, c_fake_tmp2)))
-            g_inp += (c_fake_one_hot2_v,)
-
-    return g_inp, c_fake1_v, c_fake2_v
+        if config.dataname == "MNIST": 
+            c_fake_one_hot1 = Variable(utils.cuda(to_one_hot(config.categories, c_fake1.data)))
+            g_inp += (c_fake_one_hot1,) 
+            
+            if config.coupled:
+                c_fake_one_hot2 = Variable(utils.cuda(to_one_hot(config.categories, c_fake2.data)))
+                g_inp += (c_fake_one_hot2,)
+        else :
+            g_inp += (c_fake1,)
+            if config.coupled:
+                g_inp += (c_fake2,)
+    return g_inp

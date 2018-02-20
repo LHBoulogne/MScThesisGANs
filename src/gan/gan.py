@@ -1,7 +1,7 @@
 import sys
 import os
 
-from data.celeba_coupled import *
+from data.coupled import *
 from data.mnistedge import *
 from data.celeba import *
 
@@ -11,6 +11,8 @@ from vis import errorplot
 from gan.trainer import *
 from gan.aux.aux import rescale
 import utils
+
+from gan.aux.sample import sample_c
 
 class GAN():
     def __init__(self, config):
@@ -44,6 +46,14 @@ class GAN():
         self.G.load_state_dict(gstate)
         self.D.load_state_dict(dstate)
     
+    def get_celeba_dataset(self, pos_labels, neg_labels):
+        return CelebA_dataset(root='../data/celeba/', 
+              labelnames=self.config.labelnames, pos_labels=pos_labels, neg_labels=neg_labels, 
+              transform=transforms.Compose([transforms.CenterCrop(160),
+                                            transforms.Scale((self.config.imsize,self.config.imsize)),
+                                            transforms.ToTensor(),
+                                            transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]))
+
     def get_dataset(self):
         if self.config.coupled: 
             if self.config.dataname == "MNIST":
@@ -51,13 +61,10 @@ class GAN():
                                                transforms.ToTensor(),
                                                transforms.Lambda(rescale)]))
             elif self.config.dataname == "CelebA":
-                dataset = CelebA_dataset_coupled(config=self.config, 
-                      root='../data/celeba/', 
-                      transform=transforms.Compose([transforms.CenterCrop(self.config.cropsize),
-                                                    transforms.Scale((self.config.imsize,self.config.imsize)),
-                                                    transforms.ToTensor(),
-                                                    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])) 
-                      # TODO: batches=self.config.batches)
+                dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg)
+                dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg)
+                dataset = CoupledDataset(self.config, dataset1, dataset2)
+
         else :
             if self.config.dataname == "MNIST":
                 dataset = dset.MNIST(root='../data/mnist', download=True, 
@@ -65,11 +72,8 @@ class GAN():
                                                     transforms.ToTensor(),
                                                     transforms.Lambda(rescale)]))
             elif self.config.dataname == "CelebA":
-                dataset = dset.ImageFolder(root='../data/celeba/', 
-                      transform=transforms.Compose([transforms.CenterCrop(160),
-                                                    transforms.Scale((self.config.imsize,self.config.imsize)),
-                                                    transforms.ToTensor(),
-                                                    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]))
+                dataset = self.get_celeba_dataset([], [])
+
         return dataset
 
     def make_snapshot(self, epoch, batch, trainer, imgsaver):
@@ -90,7 +94,7 @@ class GAN():
 
         epoch = 0
         steps_without_G_update = 0
-
+        c_fake = None
         while epoch < self.config.epochs:
             print("Epoch: "+str(epoch+1)+ "/" + str(self.config.epochs) + ' '*10)
 
@@ -100,7 +104,9 @@ class GAN():
                 
                 print("\rBatch " + str(batch))
                 
-                trainer.next_step(data)
+                if self.config.auxclas :
+                    c_fake = sample_c(self.config, dataset)
+                trainer.next_step(data, c_fake) #! Using the SAME c_fake for generator and discriminator update!
 
                 if trainer.update_discriminator(self.G, self.D):
                     steps_without_G_update += 1

@@ -6,52 +6,63 @@ import numpy as np
 import random
 
 class CelebA_dataset(torch.utils.data.Dataset):
-    def __init__(self, labelnames=None, root='../../../data/celeba/', transform=None) :
+    def __init__(self, labelnames=["Male"], pos_labels=[], neg_labels=[], root='../../../data/celeba/', transform=None) :
         self.img_dataset = dset.ImageFolder(root=root, transform=transform)
         self.labelnames = labelnames
 
-        self.length = len(self.img_dataset)
+        with open(os.path.join(root, "list_attr_celeba.txt")) as f:
+            contents= list(f)
 
-        if self.labelnames:
-            with open(os.path.join(root, "list_attr_celeba.txt")) as f:
-                self.contents= list(f)
+        all_labelnames = contents[1].split()
+        
+        label_idcs = self.names_to_idcs(all_labelnames, labelnames)
+        pos_idcs   = self.names_to_idcs(all_labelnames, pos_labels)
+        neg_idcs   = self.names_to_idcs(all_labelnames, neg_labels)
 
-            all_labelnames = self.contents[1].split()
-            self.label_idcs = []
-            for labelname in labelnames:
-                self.label_idcs += [all_labelnames.index(labelname) + 1] # +1 to ignore the file name entry
+        contents = contents[2:]
+        self.labels = {}
+        self.valid_idcs = []
+        for idx in range(len(contents)):
+            y = contents[idx].split()
 
-            self.contents = self.contents[2:]
-            for idx in range(len(self.contents)):
-                labels = self.contents[idx].split()
-                labels = [1 if labels[i] == '1' else 0 for i in self.label_idcs]
-                self.contents[idx] = labels
-
-
-
-    def get_label_names(self):
-        return self.labelnames
+            # check if labeled correctly
+            if all([y[i] == '1' for i in pos_idcs]) and all([y[i] != '1' for i in neg_idcs]):    
+                y = [1 if y[i] == '1' else 0 for i in label_idcs]
+                self.valid_idcs += [idx]
+                self.labels[idx] = y
+        
+    def names_to_idcs(self, all_labelnames, labels):
+        idcs = []
+        for labelname in labels:
+            idcs += [all_labelnames.index(labelname) + 1] # +1 to ignore the file name entry
+        return idcs
 
     def __len__(self):
-        return self.length
+        return len(self.valid_idcs)
 
-    def get_labels(self, idx):
-        return torch.FloatTensor(self.contents[idx])
-
-    def get_random_labels(self, batch_size):
-        list_of_labels = []
+    def get_random_labelbatch(self, batch_size):
+        ys = []
         for it in range(batch_size):
-            idx = random.randrange(self.length)
-            list_of_labels += [self.contents[idx]]
-        return torch.FloatTensor(list_of_labels)
+            ys += [self.get_y(np.random.randint(len(self))).unsqueeze(0)]
+        return torch.cat(ys, 0)
+
+    def get_y(self, idx):
+        return torch.FloatTensor(self.labels[idx])
 
     def __getitem__(self, idx):
-        if not self.labelnames:
-            return self.img_dataset[idx][0]
-
-        return self.img_dataset[idx][0], self.get_labels(idx)
+        i = self.valid_idcs[idx]
+        return self.img_dataset[i][0], self.get_y(i)
 
 if __name__ == "__main__":
-    dataset = CelebA_dataset(['5_o_Clock_Shadow', 'Arched_Eyebrows', 'Attractive'], "../../data/celeba", transforms.ToTensor())
+    import matplotlib.pyplot as plt
+
+    dataset = CelebA_dataset(labelnames=['Male', 'Smiling', 'Arched_Eyebrows'],  
+                             pos_labels=['Smiling'],
+                             neg_labels=['Male'],
+                             root="../../data/celeba", 
+                             transform=transforms.ToTensor())
     for it in range(10):
-        print(dataset[it])
+        print(dataset[it][1].numpy())
+        im = np.swapaxes(np.swapaxes(dataset[it][0].numpy(), 0, 2), 0,1)
+        plt.imshow(im)
+        plt.show()

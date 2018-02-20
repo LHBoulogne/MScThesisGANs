@@ -54,10 +54,11 @@ def parse_args() :
     # Coupled
     parser.add_argument('--batches', type=int,  default=25000)
     parser.add_argument('--balance', type=str2bool, default=True)
-    parser.add_argument('--colabelname', type=str, default="Male") # CelebA
-    parser.add_argument('--classlabelname', type=str, default="Smiling") # CelebA
-    parser.add_argument('--labels1', nargs='+', type=int, default=[0,1,2,3,4,5,6,7,8,9]) # MNIST
-    parser.add_argument('--labels2', nargs='+', type=int, default=[0,1,2,3,4,  6,7,8,9]) # MNIST
+    parser.add_argument('--labelnames', nargs='+', type=str, default=["Smiling", "Male"]) # CelebA
+    parser.add_argument('--labels1', nargs='+', type=str, default=[0,1,2,3,4,5,6,7,8,9]) # digits for MNIST, always True for dataset1 for CelebA
+    parser.add_argument('--labels2', nargs='+', type=str, default=[0,1,2,3,4,  6,7,8,9]) # digits for MNIST, always True for dataset2 for CelebA
+    parser.add_argument('--labels1_neg', nargs='+', type=str, default=[]) # always False for dataset1 for CelebA
+    parser.add_argument('--labels2_neg', nargs='+', type=str, default=[]) # always False for dataset2 for CelebA
     # Class vector
     parser.add_argument('--c_len', type=int, default=10)
 
@@ -131,6 +132,14 @@ def parse_args() :
     if config.g_b2 is None:
         config.g_b2 = config.b2
 
+    if config.labels1 == ["None"]:
+        config.labels1 = []
+    if config.labels2 == ["None"]:
+        config.labels2 = []
+
+    if config.dataname == "MNIST":
+        config.labels1 = [int(label) for label in config.labels1]
+        config.labels2 = [int(label) for label in config.labels2]
     config.savefolder = os.path.join('../savedata/', config.savefolder)
     config.loadfolder = os.path.join('../savedata/', config.loadfolder)
     return config

@@ -29,7 +29,7 @@ class Discriminator(nn.Module):
         if config.auxclas:
             self.conv3c = FeatureMaps2Vector(config.d_dim*50, config.categories, config.d_last_layer, kernel_size=1)
     def forward(self, x_a, x_b):
-        
+
         h0_a = self.pool0(self.conv0_a(x_a))
         h1_a = self.pool1(self.conv1(h0_a))
         h2_a = self.prelu2(self.conv2(h1_a))
