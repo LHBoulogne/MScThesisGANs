@@ -27,21 +27,32 @@ class Visualizer() :
         
         #init c if necessary
         if config.auxclas:
-            c = np.repeat(range(config.categories), self.vis_noise_len)
-            c_tensor = torch.from_numpy(c)
-            one_hot = to_one_hot(config.categories, c_tensor)
-            
-            z = z.repeat(config.categories,1)
-            self.x_dim = config.categories
+            if config.dataname == "MNIST":
+                c_len = config.categories
+                c = np.repeat(range(c_len), self.vis_noise_len)
+                c_tensor = torch.from_numpy(c)
+                c_g_input = to_one_hot(c_len, c_tensor)
+            elif config.dataname == "CelebA":
+                c_len = 2**config.categories
+                c = []
+                for n in range(c_len):
+                    binary = bin(n)[2:].zfill(config.categories)
+
+                    c += [[int(x) for x in binary]]
+                c = np.array(c, dtype=np.float32)
+                c = np.repeat(c, self.vis_noise_len, axis=0)
+                c_g_input = torch.from_numpy(c)
+                
+            z = z.repeat(c_len,1)
+            self.x_dim = c_len
             
 
         #construct input
         self.generator_input = (utils.cuda(Variable(z)),)
         if config.auxclas:
-            self.generator_input += (utils.cuda(Variable(one_hot)),)
+            self.generator_input += (utils.cuda(Variable(c_g_input)),)
             if config.coupled:
-                self.generator_input += (utils.cuda(Variable(one_hot)),)
-            
+                self.generator_input += (utils.cuda(Variable(c_g_input)),)
 
     def output_to_img(self, output):
         x = output.shape[2]
