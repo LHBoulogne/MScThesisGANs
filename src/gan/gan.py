@@ -46,9 +46,10 @@ class GAN():
         self.G.load_state_dict(gstate)
         self.D.load_state_dict(dstate)
     
-    def get_celeba_dataset(self, pos_labels, neg_labels):
+    def get_celeba_dataset(self, pos_labels, neg_labels, domain_label=None, domain_val=None):
         return CelebA_dataset(root='../data/celeba/', 
               labelnames=self.config.labelnames, pos_labels=pos_labels, neg_labels=neg_labels, 
+              domain_label=domain_label, domain_val=domain_val,
               transform=transforms.Compose([transforms.CenterCrop(160),
                                             transforms.Scale((self.config.imsize,self.config.imsize)),
                                             transforms.ToTensor(),
@@ -61,8 +62,8 @@ class GAN():
                                                transforms.ToTensor(),
                                                transforms.Lambda(rescale)]))
             elif self.config.dataname == "CelebA":
-                dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg)
-                dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg)
+                dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg, self.config.domainlabel, 1)
+                dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg, self.config.domainlabel, 0)
                 dataset = CoupledDataset(self.config, dataset1, dataset2)
 
         else :
@@ -72,7 +73,7 @@ class GAN():
                                                     transforms.ToTensor(),
                                                     transforms.Lambda(rescale)]))
             elif self.config.dataname == "CelebA":
-                dataset = self.get_celeba_dataset([], [])
+                dataset = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg)
 
         return dataset
 
