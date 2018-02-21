@@ -30,7 +30,9 @@ class CelebA_dataset(torch.utils.data.Dataset):
 
             # check if labeled correctly
             if domain_label is None or y[domain_idx] == domain_val:
-                if all([y[i] == '1' for i in pos_idcs]) and all([y[i] != '1' for i in neg_idcs]):    
+                usinglabels = pos_labels==[] and neg_labels==[]
+                validlabels = any([y[i] == '1' for i in pos_idcs]) or any([y[i] != '1' for i in neg_idcs])
+                if usinglabels or validlabels:    
                     y = [1 if y[i] == '1' else 0 for i in label_idcs]
                     self.valid_idcs += [idx]
                     self.labels[idx] = y
