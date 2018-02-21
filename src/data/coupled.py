@@ -6,7 +6,7 @@ class CoupledDataset(Dataset) :
     def __init__(self, config, dataset1, dataset2) :
         self.dataset1 = dataset1
         self.dataset2 = dataset2
-        self.length = config.batches
+        self.length = config.batches * config.mini_batch_size
 
     def __len__(self):
         return self.length

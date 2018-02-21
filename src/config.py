@@ -59,6 +59,7 @@ def parse_args() :
     parser.add_argument('--labels2', nargs='+', type=str, default=[0,1,2,3,4,  6,7,8,9]) # digits for MNIST, always True for dataset2 for CelebA
     parser.add_argument('--labels1_neg', nargs='+', type=str, default=[]) # always False for dataset1 for CelebA
     parser.add_argument('--labels2_neg', nargs='+', type=str, default=[]) # always False for dataset2 for CelebA
+    parser.add_argument('--domainlabel', type=str, default=None) #CelebA
     # Class vector
     parser.add_argument('--c_len', type=int, default=10)
 
