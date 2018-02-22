@@ -90,7 +90,7 @@ class GAN():
         dataloader = torch.utils.data.DataLoader(dataset, 
             batch_size=self.config.mini_batch_size, shuffle=True, num_workers=3)
 
-        imgsaver = Visualizer(dataset, self.config)
+        imgsaver = Visualizer(self.config)
         trainer = GANTrainer(self.config, self.G, self.D)
 
         epoch = 0
@@ -130,5 +130,5 @@ class GAN():
         dataloader = torch.utils.data.DataLoader(dataset, 
             batch_size=self.config.mini_batch_size, shuffle=True, num_workers=3)
 
-        imgsaver = Visualizer(dataset, self.config)
+        imgsaver = Visualizer(self.config)
         imgsaver.save_test_imgs(self.G)
