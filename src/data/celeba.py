@@ -65,13 +65,21 @@ class CelebA_dataset(torch.utils.data.Dataset):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
-    dataset = CelebA_dataset(labelnames=['Male', 'Smiling', 'Arched_Eyebrows'],  
-                             pos_labels=['Smiling'],
-                             neg_labels=['Male'],
+    dataset = CelebA_dataset(labelnames=['Smiling'],  
+                             pos_labels=[],
+                             neg_labels=[],
+                             domain_label='Male',
+                             domain_val=1,
                              root="../../data/celeba", 
                              transform=transforms.ToTensor())
+
+
     for it in range(10):
-        print(dataset[it][1].numpy())
-        im = np.swapaxes(np.swapaxes(dataset[it][0].numpy(), 0, 2), 0,1)
+        idx = np.random.randint(len(dataset))
+        
+        im, lab = dataset[idx]
+
+        print(lab.numpy())
+        im = np.swapaxes(np.swapaxes(im.numpy(), 0, 2), 0,1)
         plt.imshow(im)
         plt.show()

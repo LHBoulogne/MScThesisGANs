@@ -12,7 +12,7 @@ from gan.aux.aux import to_one_hot
 import utils
 
 class Visualizer() :
-    def __init__(self, dataset, config):
+    def __init__(self, config):
         self.config = config
         
         self.vis_noise_len = config.vis_dim*config.vis_dim

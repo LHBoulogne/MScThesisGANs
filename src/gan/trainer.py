@@ -73,6 +73,7 @@ class GANTrainer():
             print('batch size is off: ' + str(self.this_batch_size))
 
 
+
     def get_error_storage(self):
         return self.error_storage
 
