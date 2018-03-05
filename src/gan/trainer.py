@@ -184,6 +184,23 @@ class GANTrainer():
         if self.config.coupled:
             d_inp_real += (self.x2_real,)
 
+        import matplotlib.pyplot as plt
+        print("real")
+        print(self.c_real1[0].data.numpy(), self.c_real2[0].data.numpy())
+        for inp in d_inp_real:
+            im = inp[0].data.numpy()/2 + 0.5
+            im = np.moveaxis(im, 0,2)
+            plt.imshow(im)
+            plt.show()
+
+        print('fake')
+        print(self.c_fake1[0].data.numpy(), self.c_fake1[0].data.numpy())
+        for inp in d_inp_fake:
+            im = inp[0].data.numpy()/2 + 0.5
+            im = np.moveaxis(im, 0,2)
+            plt.imshow(im)
+            plt.show()
+
         d_out_fake = D(*d_inp_fake)
         d_out_real = D(*d_inp_real)
         
