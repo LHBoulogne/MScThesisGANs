@@ -60,6 +60,7 @@ def parse_args() :
     parser.add_argument('--labels1_neg', nargs='+', type=str, default=[]) #  CelebA
     parser.add_argument('--labels2_neg', nargs='+', type=str, default=[]) #  CelebA
     parser.add_argument('--domainlabel', type=str, default=None) #CelebA
+    parser.add_argument('--labeltype', type=str, default='bool') #CelebA
     # Class vector
     parser.add_argument('--c_len', type=int, default=10)
 

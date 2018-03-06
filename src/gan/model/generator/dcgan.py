@@ -65,10 +65,55 @@ class Generator(nn.Module):
         features_a = self.main(inp_a)
         out_a = self.last_a(features_a)
 
+
+
         if self.coupled:
             features_b = self.main(inp_b)
             out_b = self.last_b(features_b)
-            return out_a, out_b
+            """
+            import matplotlib.pyplot as plt
+            import numpy as np
+
+            z_flat = z[0].data.numpy()
+            print(z_flat.shape)
+            plt.hist(z_flat)
+            plt.show()
+            
+            a_w = list(self.last_a[0].parameters())[0]
+            b_w = list(self.last_b[0].parameters())[0]
+            print(features_a[0,0,:2,:2])
+            print(features_b[0,0,:2,:2])
+            print()
+
+            print(a_w[0,0,:2,:2])
+            print(b_w[0,0,:2,:2])
+            print()
+
+            print(out_a[0,0,:2,:2])
+            print(out_b[0,0,:2,:2])
+            print()
+
+            print(out_a.data.numpy().shape)
+
+            print(c_a[0].data.numpy(), c_b[0].data.numpy())
+            ima = out_a[0].data.numpy()/2 + 0.5
+            ima = np.moveaxis(ima, 0,2)
+            plt.imshow(ima)
+            plt.show()
         
+            imb = out_b[0].data.numpy()/2 + 0.5
+            imb = np.moveaxis(imb, 0,2)
+            plt.imshow(imb)
+            plt.show()
+
+            im = imb-ima
+            plt.imshow(im)
+            print((ima[:2,:2, 0]-0.5)*2)
+            print((imb[:2,:2, 0]-0.5)*2)
+            
+            plt.show()
+"""        
+            return out_a, out_b
+
         return (out_a,)
         

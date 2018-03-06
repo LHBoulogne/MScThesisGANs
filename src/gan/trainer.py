@@ -171,12 +171,17 @@ class GANTrainer():
         if self.config.mini_batch_size != self.this_batch_size:
             return False
 
+        """
+        G.eval()
+        D.eval()
+        """
+        
         D.zero_grad()
 
         # forward pass
           #for fake data
         g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, self.c_fake1, self.c_fake2)
-        
+
         g_out = G(*g_inp)
         d_inp_fake = self.detach(g_out) #makes sure that the backward pass will stop at generator output
         
@@ -184,22 +189,55 @@ class GANTrainer():
         if self.config.coupled:
             d_inp_real += (self.x2_real,)
 
-#        import matplotlib.pyplot as plt
-#        print("real")
-#        print(self.c_real1[0].data.numpy(), self.c_real2[0].data.numpy())
-#        for inp in d_inp_real:
-#            im = inp[0].data.numpy()/2 + 0.5
-#            im = np.moveaxis(im, 0,2)
-#            plt.imshow(im)
-#            plt.show()
+        """
+        config = self.config
+        
+        self.vis_noise_len = config.vis_dim*config.vis_dim
+        if config.auxclas:
+            self.vis_noise_len = config.vis_dim
+        self.x_dim = config.vis_dim
+        self.y_dim = config.vis_dim
 
-#        print('fake')
-#        print(self.c_fake1[0].data.numpy(), self.c_fake1[0].data.numpy())
-#        for inp in d_inp_fake:
-#            im = inp[0].data.numpy()/2 + 0.5
-#            im = np.moveaxis(im, 0,2)
-#            plt.imshow(im)
-#            plt.show()
+        #init z
+        from gan.aux.sample import sample_z
+        z = torch.FloatTensor(self.vis_noise_len, config.z_len)
+        sample_z(config.z_distribution, z)
+        
+        #init c if necessary
+        if config.auxclas:
+            if config.dataname == "MNIST":
+                c_len = config.categories
+                c = np.repeat(range(c_len), self.vis_noise_len)
+                c_tensor = torch.from_numpy(c)
+                c_g_input = to_one_hot(c_len, c_tensor)
+            elif config.dataname == "CelebA":
+                c_len = 2**config.categories
+                c = []
+                for n in range(c_len):
+                    binary = bin(n)[2:].zfill(config.categories)
+
+                    c += [[int(x) for x in binary]]
+                c = np.array(c, dtype=np.float32)
+                c = np.repeat(c, self.vis_noise_len, axis=0)
+                c_g_input = torch.from_numpy(c)
+                
+            z = z.repeat(c_len,1)
+            self.x_dim = c_len
+            
+
+        #construct input
+        self.generator_input = (utils.cuda(Variable(z)),)
+        if config.auxclas:
+            self.generator_input += (utils.cuda(Variable(c_g_input)),)
+            if config.coupled:
+                self.generator_input += (utils.cuda(Variable(c_g_input)),)
+
+        g_out2 = G(*self.generator_input)
+        print("En nu komtie:")
+        print(self.generator_input[1], g_inp[1])
+        print(self.generator_input[2], g_inp[2])
+
+        quit()"""
 
         d_out_fake = D(*d_inp_fake)
         d_out_real = D(*d_inp_real)

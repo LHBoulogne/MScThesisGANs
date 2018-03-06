@@ -53,7 +53,8 @@ class GAN():
               transform=transforms.Compose([transforms.CenterCrop(160),
                                             transforms.Scale((self.config.imsize,self.config.imsize)),
                                             transforms.ToTensor(),
-                                            transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]))
+                                            transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]),
+              labeltype=self.config.labeltype)
 
     def get_dataset(self):
         if self.config.coupled: 
@@ -78,11 +79,18 @@ class GAN():
         return dataset
 
     def make_snapshot(self, epoch, batch, trainer, imgsaver):
+        self.G.eval()
+        self.D.eval()
+
         trainer.save_error()
         if self.config.visualize_training:
             imgsaver.save_training_imgs(epoch, batch, self.G)
             errorplot.save_error_plots(trainer.get_error_storage(), self.config)
         self.save()
+
+        self.G.train()
+        self.D.train()
+
 
 
     def train(self):
@@ -96,6 +104,8 @@ class GAN():
         epoch = 0
         steps_without_G_update = 0
         c_fake = None
+        self.D.train()
+        self.G.train()
         while epoch < self.config.epochs:
             print("Epoch: "+str(epoch+1)+ "/" + str(self.config.epochs) + ' '*10)
 

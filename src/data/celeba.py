@@ -6,7 +6,7 @@ import numpy as np
 import random
 
 class CelebA_dataset(torch.utils.data.Dataset):
-    def __init__(self, labelnames=["Male"], pos_labels=[], neg_labels=[], domain_label=None, domain_val=None, root='../../../data/celeba/', transform=None) :
+    def __init__(self, labelnames=["Male"], pos_labels=[], neg_labels=[], domain_label=None, domain_val=None, root='../../../data/celeba/', transform=None, labeltype='bool') :
         self.img_dataset = dset.ImageFolder(root=root, transform=transform)
         self.labelnames = labelnames
 
@@ -25,6 +25,7 @@ class CelebA_dataset(torch.utils.data.Dataset):
         contents = contents[2:]
         self.labels = {}
         self.valid_idcs = []
+        true, false = self.get_true_false(labeltype)
         for idx in range(len(contents)):
             y = contents[idx].split()
 
@@ -33,10 +34,18 @@ class CelebA_dataset(torch.utils.data.Dataset):
                 usinglabels = pos_labels==[] and neg_labels==[]
                 validlabels = any([y[i] == '1' for i in pos_idcs]) or any([y[i] != '1' for i in neg_idcs])
                 if usinglabels or validlabels:    
-                    y = [1 if y[i] == '1' else 0 for i in label_idcs]
+                    y = [true if y[i] == '1' else false for i in label_idcs]
+                    if labeltype == "onehot":
+                        y = [val for label in y for val in label]
                     self.valid_idcs += [idx]
                     self.labels[idx] = y
         
+    def get_true_false(self, labeltype):
+        if labeltype == "bool":
+            return 1, 0
+        if labeltype == "onehot":
+            return [0,1], [1,0]
+
     def names_to_idcs(self, all_labelnames, labels):
         idcs = []
         for labelname in labels:
