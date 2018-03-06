@@ -33,11 +33,7 @@ class GANTrainer():
         if config.dataname == "MNIST":
             self.c_criterion = nn.CrossEntropyLoss() #Includes the softmax function
         else :
-            if self.config.labeltype == 'boolean':
-                self.c_criterion = nn.BCEWithLogitsLoss()
-            elif self.config.labeltype == 'onehot':
-                self.c_criterion = nn.CrossEntropyLoss() #TODO: DOES ONLY SUPPORT A SINGLE LABEL!
-
+            self.c_criterion = nn.BCEWithLogitsLoss() #TODO: fix this for one-hot celeba
 
         self.g_opt = optim.Adam(G.parameters(), lr=config.g_lr, betas=(config.g_b1, config.g_b2), weight_decay=config.g_weight_decay)
         self.d_opt = optim.Adam(D.parameters(), lr=config.d_lr, betas=(config.d_b1, config.d_b2), weight_decay=config.d_weight_decay)
