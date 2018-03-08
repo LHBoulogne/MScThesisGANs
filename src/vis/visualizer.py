@@ -27,21 +27,21 @@ class Visualizer() :
         
         #init c if necessary
         if config.auxclas:
-            if config.dataname == "MNIST":
+            if config.dataname == "MNIST" or config.labeltype == "onehot":
                 c_len = config.categories
                 c = np.repeat(range(c_len), self.vis_noise_len)
                 c_tensor = torch.from_numpy(c)
                 c_g_input = to_one_hot(c_len, c_tensor)
-            elif config.dataname == "CelebA":
-                c_len = 2**config.categories
-                c = []
-                for n in range(c_len):
-                    binary = bin(n)[2:].zfill(config.categories)
+            elif config.dataname == "CelebA" and config.labeltype == "bool":
+                    c_len = 2**config.categories
+                    c = []
+                    for n in range(c_len):
+                        binary = bin(n)[2:].zfill(config.categories)
 
-                    c += [[int(x) for x in binary]]
-                c = np.array(c, dtype=np.float32)
-                c = np.repeat(c, self.vis_noise_len, axis=0)
-                c_g_input = torch.from_numpy(c)
+                        c += [[int(x) for x in binary]]
+                    c = np.array(c, dtype=np.float32)
+                    c = np.repeat(c, self.vis_noise_len, axis=0)
+                    c_g_input = torch.from_numpy(c)
                 
             z = z.repeat(c_len,1)
             self.x_dim = c_len
