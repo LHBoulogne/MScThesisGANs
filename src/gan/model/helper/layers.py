@@ -68,3 +68,19 @@ class FeatureMaps2Vector(nn.Module):
         return self.main(inp)
 
 
+class Activation(nn.Module):
+    def __init__(self, mode):
+        super(Activation, self).__init__()
+        if mode == 'relu':
+            self.main = nn.ReLU()
+        elif mode == 'leakyrelu':
+            self.main = nn.LeakyReLU(0.2)
+        elif mode == 'selu':
+            self.main = nn.SELU()
+        elif mode == 'none':
+            self.main = Identity()
+        else :
+            raise RuntimeError('norm argument has unknown value: ' + mode)
+
+    def forward(self, inp):
+        return self.main(inp)

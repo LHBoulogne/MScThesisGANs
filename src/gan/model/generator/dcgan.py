@@ -16,7 +16,7 @@ class Generator(nn.Module):
         layers = (
             Vector2FeatureMaps(config.z_len+c_len, config.g_dim*mult, config.g_first_layer),
             Norm2d(config.g_dim*mult, config.g_norm),
-            nn.ReLU()
+            Activation(config.g_act)
             )
 
         for it in range(config.blocks-1, -1, -1):
@@ -24,7 +24,7 @@ class Generator(nn.Module):
             layers += (
                 nn.ConvTranspose2d(config.g_dim*mult*2, config.g_dim*mult, 4, stride=2, padding=1),
                 Norm2d(config.g_dim*mult, config.g_norm),
-                nn.ReLU()
+                Activation(config.g_act)
                 )
 
         self.main = nn.Sequential(*layers)
@@ -40,7 +40,7 @@ class Generator(nn.Module):
             last = nn.Sequential(
                 nn.ConvTranspose2d(config.g_dim, config.g_dim//2, 4, stride=2, padding=1),
                 Norm2d(config.g_dim//2, config.g_norm),
-                nn.ReLU(),
+                Activation(config.g_act),
 
                 nn.Conv2d(config.g_dim//2, config.imgch, 3, stride=1, padding=1),
                 nn.Tanh()

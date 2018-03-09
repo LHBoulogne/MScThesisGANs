@@ -96,6 +96,7 @@ def parse_args() :
     parser.add_argument('--g_extra_conv', type=str2bool, default=False)
     parser.add_argument('--g_first_layer', type=str, default='convtransposed')
     parser.add_argument('--g_norm', type=str, default=None) #takes value of --norm if None
+    parser.add_argument('--g_act', type=str, default='relu')
     
     # Discriminator
     parser.add_argument('--discriminator', type=str, default='dcgan')
@@ -106,7 +107,8 @@ def parse_args() :
     parser.add_argument('--d_weight_decay', type=float, default=0.0)
     parser.add_argument('--d_last_layer', type=str, default='conv')
     parser.add_argument('--d_norm', type=str, default=None) #takes value of --norm if None
-
+    parser.add_argument('--d_act', type=str, default='leakyrelu')
+    
     parser.add_argument('--weight_decay', type=float, default=0.0)
     config = parser.parse_args()
 
