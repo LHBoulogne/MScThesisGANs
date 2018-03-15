@@ -77,9 +77,7 @@ class Generator(nn.Module):
             features_b = self.main(inp_b)
             out_b = self.last_b(features_b)
 
-
-        self.train()            
-
+            self.train()            
 
             import matplotlib.pyplot as plt
             import numpy as np
