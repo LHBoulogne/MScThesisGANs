@@ -58,8 +58,8 @@ class Generator(nn.Module):
         c_a.data[0][0] = 0#TODO REMOVE
         c_a.data[0][1] = 1#TODO REMOVE
 
-        c_b.data[0][1] = 0#TODO REMOVE
-        c_b.data[0][0] = 1#TODO REMOVE
+        c_b.data[0][0] = 0#TODO REMOVE
+        c_b.data[0][1] = 1#TODO REMOVE
 
         if self.auxclas:
             inp_a = torch.cat((z, c_a), 1)
