@@ -54,6 +54,8 @@ class Generator(nn.Module):
 
     def forward(self, z, c_a=None, c_b=None): #for accogans and cogans
 
+        self.eval()
+        
         c_a.data[0][0] = 0#TODO REMOVE
         c_a.data[0][1] = 1#TODO REMOVE
 
