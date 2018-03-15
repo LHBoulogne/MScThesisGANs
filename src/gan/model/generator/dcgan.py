@@ -53,6 +53,7 @@ class Generator(nn.Module):
         return last
 
     def forward(self, z, c_a=None, c_b=None): #for accogans and cogans
+        self.eval()
 
         c_a.data[0][0] = 0#TODO REMOVE
         c_a.data[0][1] = 1#TODO REMOVE
@@ -72,12 +73,12 @@ class Generator(nn.Module):
         features_a = self.main(inp_a)
         out_a = self.last_a(features_a)
 
-
-
         if self.coupled:
             features_b = self.main(inp_b)
             out_b = self.last_b(features_b)
-            
+
+
+        self.train()            
 
 
             import matplotlib.pyplot as plt
