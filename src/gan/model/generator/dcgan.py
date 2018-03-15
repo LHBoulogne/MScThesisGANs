@@ -70,7 +70,9 @@ class Generator(nn.Module):
         if self.coupled:
             features_b = self.main(inp_b)
             out_b = self.last_b(features_b)
-            """
+            
+
+
             import matplotlib.pyplot as plt
             import numpy as np
 
@@ -112,7 +114,10 @@ class Generator(nn.Module):
             print((imb[:2,:2, 0]-0.5)*2)
             
             plt.show()
-"""        
+
+
+
+
             return out_a, out_b
 
         return (out_a,)
