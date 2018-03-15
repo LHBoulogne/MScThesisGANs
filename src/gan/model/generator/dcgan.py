@@ -53,15 +53,15 @@ class Generator(nn.Module):
         return last
 
     def forward(self, z, c_a=None, c_b=None): #for accogans and cogans
-
+        '''
         self.eval()
-        
+
         c_a.data[0][0] = 0#TODO REMOVE
         c_a.data[0][1] = 1#TODO REMOVE
 
         c_b.data[0][1] = 0#TODO REMOVE
         c_b.data[0][0] = 1#TODO REMOVE
-
+        '''
         if self.auxclas:
             inp_a = torch.cat((z, c_a), 1)
             if self.coupled:
@@ -80,7 +80,7 @@ class Generator(nn.Module):
             features_b = self.main(inp_b)
             out_b = self.last_b(features_b)
             
-
+            '''
 
             import matplotlib.pyplot as plt
             import numpy as np
@@ -99,8 +99,7 @@ class Generator(nn.Module):
             plt.imshow(imb)
             plt.show()
 
-
-
+            '''
 
             return out_a, out_b
 
