@@ -30,6 +30,21 @@ class Norm2d(nn.Module):
     def forward(self, inp):
         return self.main(inp)
 
+class Norm1d(nn.Module):
+    def __init__(self, dim, mode):
+        super(Norm1d, self).__init__()
+        if mode == 'batch':
+            self.main = nn.BatchNorm1d(dim)
+        elif mode == 'instance':
+            self.main = nn.InstanceNorm1d(dim)
+        elif mode == 'none':
+            self.main = Identity()
+        else :
+            raise RuntimeError('norm argument has unknown value: ' + mode)
+
+    def forward(self, inp):
+        return self.main(inp)
+
 
 class Vector2FeatureMaps(nn.Module):
     def __init__(self, vec_len, feature_maps, mode, fm_dim=4, kernel_size=4):
