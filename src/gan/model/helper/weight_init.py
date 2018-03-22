@@ -13,7 +13,8 @@ def normal_init(m):
 #        if isinstance(m, nn.BatchNorm2d):
 #            m.weight.data.normal_(1, 0.02)
 #        elif not
-        if not isinstance(m, nn.InstanceNorm2d) and not isinstance(m, nn.BatchNorm2d): #instance norm weight is None
+        normlayer = isinstance(m, nn.InstanceNorm2d) or isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.InstanceNorm1d) or isinstance(m, nn.BatchNorm1d)
+        if not normlayer: #instance norm weight is None
             m.weight.data.normal_(0, 0.02)
         #if not isinstance(m, nn.InstanceNorm2d):
             m.bias.data.zero_()
