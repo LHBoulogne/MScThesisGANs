@@ -17,7 +17,8 @@ def normal_init(m):
         if not normlayer: #instance norm weight is None
             m.weight.data.normal_(0, 0.02)
         #if not isinstance(m, nn.InstanceNorm2d):
-            m.bias.data.zero_()
+            if not m.bias is None:
+                m.bias.data.zero_()
     else:
         for mod in m._modules:
             normal_init(m._modules[mod])

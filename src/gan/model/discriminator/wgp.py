@@ -8,16 +8,10 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__() 
         self.auxclas = config.auxclas
 
-        def first_layers(self):
-            return nn.Sequential(
-                nn.Conv2d(config.imgch, config.d_dim, 5, stride=2, padding=2),
-                Activation(config.d_act)
-            )
-
-        self.first_a = self.first_layers()
+        self.first_a = self.first_layers(config)
         
         if config.coupled:
-            self.first_b = self.first_layers()
+            self.first_b = self.first_layers(config)
         
         layers = ()
         for it in range(config.blocks):
@@ -32,8 +26,8 @@ class Discriminator(nn.Module):
 
         mult = 2**config.blocks
         self.predict_src = nn.Sequential(
-            nn.Conv2d(dim * 8, 1, 4),
-            Reshape(-1, 1)
+            nn.Conv2d(config.d_dim * mult, 1, 4),
+            Reshape(-1, 1),
             nn.Sigmoid()
         )
 
@@ -44,6 +38,12 @@ class Discriminator(nn.Module):
                 )
 
         weight_init(self, config.weight_init)
+
+    def first_layers(self, config):
+        return nn.Sequential(
+            nn.Conv2d(config.imgch, config.d_dim, 5, stride=2, padding=2),
+            Activation(config.d_act)
+        )
 
     def single_forward(self, inp, first):
         hidden = first(inp)
