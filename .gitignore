@@ -6,6 +6,7 @@
 *.out
 *.sh
 *.pyc
+**.pyc
 **/__pycache__/*
 /code
 /aux
