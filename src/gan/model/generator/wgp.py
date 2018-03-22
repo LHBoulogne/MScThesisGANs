@@ -32,15 +32,15 @@ class Generator(nn.Module):
 
         self.main = nn.Sequential(*layers)
 
-        self.last_a = self.get_last_layers()
+        self.last_a = self.get_last_layers(config.g_dim)
         if config.coupled:
-            self.last_b = self.get_last_layers()
+            self.last_b = self.get_last_layers(config.g_dim)
 
         weight_init(self, config.weight_init)
 
-    def get_last_layers(self):
+    def get_last_layers(self, in_dim):
         last = nn.Sequential(
-            nn.ConvTranspose2d(config.g_dim, 3, 5, 2, padding=2, output_padding=1),
+            nn.ConvTranspose2d(in_dim, 3, 5, 2, padding=2, output_padding=1),
             nn.Tanh()
         )
         return last
