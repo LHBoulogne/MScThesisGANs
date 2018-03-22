@@ -40,7 +40,7 @@ class Generator(nn.Module):
 
     def get_last_layers(self):
         last = nn.Sequential(
-            nn.ConvTranspose2d(dim, 3, 5, 2, padding=2, output_padding=1),
+            nn.ConvTranspose2d(config.g_dim, 3, 5, 2, padding=2, output_padding=1),
             nn.Tanh()
         )
         return last
