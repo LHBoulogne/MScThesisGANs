@@ -30,9 +30,9 @@ class Norm2d(nn.Module):
     def forward(self, inp):
         return self.main(inp)
 
-class Norm1d(nn.Module):
+class Norm1D(nn.Module):
     def __init__(self, dim, mode):
-        super(Norm1d, self).__init__()
+        super(Norm1D, self).__init__()
         if mode == 'batch':
             self.main = nn.BatchNorm1d(dim)
         elif mode == 'instance':
