@@ -2,7 +2,7 @@ import sys
 import os
 
 from data.coupled import *
-from data.mnistedge import *
+from data.mnist import *
 from data.celeba import *
 
 from vis.visualizer import *
@@ -56,23 +56,26 @@ class GAN():
                                             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]),
               labeltype=self.config.labeltype)
 
+    def get_mnist_dataset(self, labels, img_type):
+        return MNIST(labels, img_type, transform=transforms.Compose([
+                                        transforms.Scale((self.config.imsize,self.config.imsize)),
+                                        transforms.ToTensor(),
+                                        transforms.Lambda(rescale)]),
+                     root='../data/mnist/')
+
     def get_dataset(self):
         if self.config.coupled: 
             if self.config.dataname == "MNIST":
-                dataset = MNIST_edge(self.config, transform=transforms.Compose([transforms.Scale((self.config.imsize,self.config.imsize)),
-                                               transforms.ToTensor(),
-                                               transforms.Lambda(rescale)]))
+                dataset1 = self.get_mnist_dataset(self.config.labels1, 'original')
+                dataset2 = self.get_mnist_dataset(self.config.labels2, 'edge')
             elif self.config.dataname == "CelebA":
                 dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg, self.config.domainlabel, 1)
                 dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg, self.config.domainlabel, 0)
-                dataset = CoupledDataset(self.config, dataset1, dataset2)
+            dataset = CoupledDataset(self.config, dataset1, dataset2)
 
         else :
             if self.config.dataname == "MNIST":
-                dataset = dset.MNIST(root='../data/mnist', download=True, 
-                      transform=transforms.Compose([transforms.Scale((self.config.imsize,self.config.imsize)),
-                                                    transforms.ToTensor(),
-                                                    transforms.Lambda(rescale)]))
+                dataset = self.get_mnist_dataset(self.config.labels1, 'original')
             elif self.config.dataname == "CelebA":
                 dataset = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg)
 
@@ -133,12 +136,63 @@ class GAN():
             self.make_snapshot(epoch, batch+1, trainer, imgsaver)
             epoch += 1
 
-
-    def test(self):
-        self.load()
-        dataset = self.get_dataset()
+    #Only works for digits now
+    def test_auxclas(self, dataset, eval_d, num):
         dataloader = torch.utils.data.DataLoader(dataset, 
             batch_size=self.config.mini_batch_size, shuffle=True, num_workers=3)
 
+        classes = 10
+        count = np.zeros(classes)
+        correct = np.zeros(classes)
+        print("Testing auxiliary classifier", num, ':')
+        for batch, data in enumerate(dataloader):
+            if batch%classes == 0:
+                print('\r', '%.2f'%(100 * batch / len(dataloader)),'%', end='\r')
+
+            # get disc input
+            x, c = utils.cuda(data) #read out data tuple
+            out = eval_d(Variable(x))
+
+            # get predictions
+            prd = out[0][1].data
+            _, predicted = torch.max(prd, 1)
+
+            count += [(c == it).sum() for it in range(classes)]
+            for it in range(classes):
+                idcs = (c == it).nonzero().squeeze()
+                if len(idcs>0) :
+                    correct[it] += (c[idcs] == predicted[idcs]).sum() 
+
+        print("Accuracy for dataset",num, ':')
+        print('count:\t', count)
+        acc = [(100*correct[it]/count[it]) for it in range(classes)]
+        print('acc:\t', ['%.2f' % x for x in acc])
+        tot_count = count.sum()
+        tot_acc = sum([count[it]*acc[it] for it in range(classes)])/tot_count
+        print('Total:')
+        print('count:\t', tot_count)
+        print('acc:\t', '%.2f' % tot_acc, '\n')
+    def test(self):
+        self.G.eval()
+        self.D.eval()
+
         imgsaver = Visualizer(self.config)
         imgsaver.save_test_imgs(self.G)
+
+        if self.config.auxclas:
+            dataset = self.get_dataset()
+
+            if self.config.coupled:
+                dsets = [dataset.dataset1, dataset.dataset2]
+                eval_d_a = lambda x: self.D(inp_a=x)
+                eval_d_b = lambda x: self.D(inp_b=x)
+                eval_ds = [eval_d_a, eval_d_b]
+            else :
+                dsets = [dataset]
+                eval_ds = [lambda x: self.D(inp_a=x)]
+
+            for it in range(len(dsets)):
+                self.test_auxclas(dsets[it], eval_ds[it], it)
+
+        self.G.train()
+        self.D.train()

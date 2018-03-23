@@ -125,7 +125,9 @@ class GANTrainer():
             x = inp_real[idx].data
             x_wave = inp_fake[idx].data
 
-            x_hat = e*x + (1-e)*x_wave
+            #x_hat = e*x + (1-e)*x_wave
+            x_hat = e*x_wave + (1-e)*x
+
             inp_hat += (utils.cuda(Variable(x_hat, requires_grad=True)),)
 
         out_hat = D(*inp_hat)

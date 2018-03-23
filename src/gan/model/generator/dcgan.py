@@ -80,7 +80,7 @@ class Generator(nn.Module):
             out_b = self.last_b(features_b)
             
 
-
+            '''
             import matplotlib.pyplot as plt
             import numpy as np
 
@@ -97,7 +97,7 @@ class Generator(nn.Module):
             imb = np.moveaxis(imb, 0,2)
             plt.imshow(imb)
             plt.show()
-
+            '''
 
 
 

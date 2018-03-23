@@ -48,8 +48,6 @@ class Generator(nn.Module):
         return h3
         
     def forward(self, z, c_a=None, c_b=None):
-        print(c_b)
-
         h3_a = self.singleForward(z, c_a)
         h3_b = self.singleForward(z, c_b)
         out_a = self.sig4(self.dconv4_a(h3_a))

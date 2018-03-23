@@ -54,9 +54,15 @@ class Discriminator(nn.Module):
             return (s,c)
         return (s,)
 
-    def forward(self, inp_a, inp_b=None):
-        out_a = self.single_forward(inp_a, self.first_a)
+    def forward(self, inp_a=None, inp_b=None):
+        if not inp_a is None:
+            out_a = self.single_forward(inp_a, self.first_a)
+
         if not inp_b is None:
             out_b = self.single_forward(inp_b, self.first_b)
-            return (out_a, out_b)
+
+            if not inp_a is None:
+                return (out_a, out_b)
+            return (out_b,)
+            
         return (out_a,)

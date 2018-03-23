@@ -28,22 +28,28 @@ class Discriminator(nn.Module):
         self.sigm = nn.Sigmoid()
         if config.auxclas:
             self.conv3c = FeatureMaps2Vector(config.d_dim*50, config.categories, config.d_last_layer, kernel_size=1)
-    def forward(self, x_a, x_b):
 
-        h0_a = self.pool0(self.conv0_a(x_a))
-        h1_a = self.pool1(self.conv1(h0_a))
-        h2_a = self.prelu2(self.conv2(h1_a))
-        h3_a = self.conv3(h2_a)
-        out_a = self.sigm(h3_a)
 
-        h0_b = self.pool0(self.conv0_b(x_b))
-        h1_b = self.pool1(self.conv1(h0_b))
-        h2_b = self.prelu2(self.conv2(h1_b))
-        h3_b = self.conv3(h2_b)
-        out_b = self.sigm(h3_b)
-
+    def single_forward(self, inp, conv0):
+        h0 = self.pool0(conv0(inp))
+        h1 = self.pool1(self.conv1(h0))
+        h2 = self.prelu2(self.conv2(h1))
+        h3 = self.conv3(h2)
+        out = self.sigm(h3)
         if self.auxclas:
-            out_a_c = self.conv3c(h2_a)
-            out_b_c = self.conv3c(h2_b)
-            return (out_a, out_a_c), (out_b, out_b_c)
-        return (out_a, out_b)
+            out_c = self.conv3c(h2)
+            return (out, out_c)
+        return (out,)
+        
+    def forward(self, inp_a=None, inp_b=None):
+        if not inp_a is None:
+            out_a = self.single_forward(inp_a, self.conv0_a)
+
+        if not inp_b is None:
+            out_b = self.single_forward(inp_b, self.conv0_b)            
+            
+            if not inp_a is None:            
+                return (out_a, out_b)
+            return (out_b,)
+
+        return (out_a,)
