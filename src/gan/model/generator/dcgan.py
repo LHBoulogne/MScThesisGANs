@@ -10,7 +10,10 @@ class Generator(nn.Module):
         self.coupled = config.coupled
         c_len = 0
         if config.auxclas:
-            c_len = config.categories
+            if config.dataname == 'CelebA' and config.labeltype == 'bool':
+                c_len = 1
+            else :
+                c_len = config.categories
 
         mult = 2**config.blocks
         layers = (
@@ -54,17 +57,18 @@ class Generator(nn.Module):
 
     def forward(self, z, c_a=None, c_b=None): #for accogans and cogans
 
+        '''
         #self.eval()
         c_a.data[0][0] = 0#TODO REMOVE
         c_a.data[0][1] = 1#TODO REMOVE
 
         c_b.data[0][0] = 1#TODO REMOVE
         c_b.data[0][1] = 0#TODO REMOVE
-
+        '''
         if self.auxclas:
-            inp_a = torch.cat((z, c_a), 1)
+            inp_a = torch.cat([z, c_a], 1)
             if self.coupled:
-                inp_b = torch.cat((z, c_b), 1)
+                inp_b = torch.cat([z, c_b], 1)
         else:
             inp_a = z
             if self.coupled:

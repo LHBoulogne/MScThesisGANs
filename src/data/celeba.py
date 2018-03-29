@@ -9,6 +9,7 @@ class CelebA_dataset(torch.utils.data.Dataset):
     def __init__(self, labelnames=["Male"], pos_labels=[], neg_labels=[], domain_label=None, domain_val=None, root='../../../data/celeba/', transform=None, labeltype='bool') :
         self.img_dataset = dset.ImageFolder(root=root, transform=transform)
         self.labelnames = labelnames
+        self.labeltype = labeltype
 
         with open(os.path.join(root, "list_attr_celeba.txt")) as f:
             contents= list(f)
@@ -25,7 +26,7 @@ class CelebA_dataset(torch.utils.data.Dataset):
         contents = contents[2:]
         self.labels = {}
         self.valid_idcs = []
-        true, false = self.get_true_false(labeltype)
+        true, false = 1, 0
         for idx in range(len(contents)):
             y = contents[idx].split()
 
@@ -35,16 +36,8 @@ class CelebA_dataset(torch.utils.data.Dataset):
                 validlabels = any([y[i] == '1' for i in pos_idcs]) or any([y[i] != '1' for i in neg_idcs])
                 if usinglabels or validlabels:    
                     y = [true if y[i] == '1' else false for i in label_idcs]
-                    if labeltype == "onehot":
-                        y = [val for label in y for val in label]
                     self.valid_idcs += [idx]
                     self.labels[idx] = y
-        
-    def get_true_false(self, labeltype):
-        if labeltype == "bool":
-            return 1, 0
-        if labeltype == "onehot":
-            return [0,1], [1,0]
 
     def names_to_idcs(self, all_labelnames, labels):
         idcs = []
@@ -55,18 +48,20 @@ class CelebA_dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.valid_idcs)
 
+
     def get_random_labelbatch(self, batch_size):
         np.random.seed()
         ys = []
         for it in range(batch_size):
             idx = np.random.randint(len(self))
             idx2 = self.valid_idcs[idx]
-            ys += [self.get_y(idx2).unsqueeze(0)]
-        return torch.cat(ys, 0)
+            label = self.get_y(idx2)
+            ys += [label]
+        return torch.cat(ys, 0).unsqueeze(1)
 
     def get_y(self, idx):
-        return torch.FloatTensor(self.labels[idx])
-
+        return torch.LongTensor(self.labels[idx])
+        
     def __getitem__(self, idx):
         idx2 = self.valid_idcs[idx]
         return self.img_dataset[idx2][0], self.get_y(idx2)

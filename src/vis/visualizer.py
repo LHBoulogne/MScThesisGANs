@@ -33,10 +33,10 @@ class Visualizer() :
                 c_tensor = torch.from_numpy(c)
                 c_g_input = to_one_hot(c_len, c_tensor)
             elif config.dataname == "CelebA" and config.labeltype == "bool":
-                    c_len = 2**config.categories
+                    c_len = 2
                     c = []
                     for n in range(c_len):
-                        binary = bin(n)[2:].zfill(config.categories)
+                        binary = bin(n)[2:].zfill(1) #unnecessarry
 
                         c += [[int(x) for x in binary]]
                     c = np.array(c, dtype=np.float32)

@@ -34,12 +34,11 @@ def sample_multi_c_helper(batch_size, labels) :
     rands = torch.from_numpy(rands)
     return rands
 
-# also puts class vector for error computation in c_fake1 and c_fake2 if specified
 def sample_generator_input(config, this_batch_size, z, c_fake1=None, c_fake2=None):
     sample_z(config.z_distribution, z.data)
     g_inp = (z,)
     if config.auxclas: #for conditional input
-        if config.dataname == "MNIST": 
+        if config.dataname == "MNIST" or config.labeltype == 'onehot':
             c_fake_one_hot1 = Variable(utils.cuda(to_one_hot(config.categories, c_fake1.data)))
             g_inp += (c_fake_one_hot1,) 
             
@@ -47,7 +46,9 @@ def sample_generator_input(config, this_batch_size, z, c_fake1=None, c_fake2=Non
                 c_fake_one_hot2 = Variable(utils.cuda(to_one_hot(config.categories, c_fake2.data)))
                 g_inp += (c_fake_one_hot2,)
         else :
-            g_inp += (c_fake1,)
+            c_fake1_inp = Variable(utils.cuda(c_fake1.data.float()))
+            g_inp += (c_fake1_inp,)
             if config.coupled:
-                g_inp += (c_fake2,)
+                c_fake2_inp = Variable(utils.cuda(c_fake2.data.float()))
+                g_inp += (c_fake2_inp,)
     return g_inp

@@ -20,7 +20,7 @@ class GANTrainer():
         if config.labelsmoothing :
             self.prob_data_is_real = 0.9
         
-        self.y_real = Variable(torch.FloatTensor(config.mini_batch_size).fill_(self.prob_data_is_real)) ###\TODO :: put this in __init__
+        self.y_real = Variable(torch.FloatTensor(config.mini_batch_size).fill_(self.prob_data_is_real))
         self.y_fake = Variable(torch.FloatTensor(config.mini_batch_size).fill_(0.0))
 
         self.z = Variable(torch.FloatTensor(config.mini_batch_size, config.z_len))
@@ -30,10 +30,8 @@ class GANTrainer():
         
         #init misc
         self.s_criterion = nn.BCELoss()
-        if config.dataname == "MNIST":
-            self.c_criterion = nn.CrossEntropyLoss() #Includes the softmax function
-        else :
-            self.c_criterion = nn.BCEWithLogitsLoss() #TODO: fix this for one-hot celeba
+        
+        self.c_criterion = nn.CrossEntropyLoss() #Includes the softmax function        
 
         self.g_opt = optim.Adam(G.parameters(), lr=config.g_lr, betas=(config.g_b1, config.g_b2), weight_decay=config.g_weight_decay)
         self.d_opt = optim.Adam(D.parameters(), lr=config.d_lr, betas=(config.d_b1, config.d_b2), weight_decay=config.d_weight_decay)
@@ -96,7 +94,7 @@ class GANTrainer():
             verdict = d_out[0]
         source_error = self.s_criterion(verdict.view(-1), y)
         if self.config.auxclas: # add loss for class_criterion() prediction
-            classification_error = self.c_criterion(class_probs, c) * self.config.c_error_weight
+            classification_error = self.c_criterion(class_probs, c.squeeze()) * self.config.c_error_weight
             return (source_error, classification_error)
 
         return (source_error,)
@@ -178,9 +176,9 @@ class GANTrainer():
         D.zero_grad()
 
         # forward pass
-          #for fake data
+          #for fake data  
         g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, self.c_fake1, self.c_fake2)
-
+        
         g_out = G(*g_inp)
         d_inp_fake = self.detach(g_out) #makes sure that the backward pass will stop at generator output
         
@@ -250,6 +248,7 @@ class GANTrainer():
 
         elif self.config.algorithm == 'default':
             # perform backward pass and update
+
             error_real, separate_errors_real = self.compute_error_GAN(d_out_real, self.y_real, self.c_real1, self.c_real2)
             error_real.backward()
 

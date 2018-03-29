@@ -3,28 +3,66 @@ import cv2
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, datasets
 import os   
+import pickle
 
 import numpy as np
 from PIL import Image
 
 class MNIST(Dataset) :
-    def __init__(self, labels, img_type='original', transform=None, root='../../../data/mnist') :
+    def __init__(self, labels, img_type='original', transform=None, root='../../../data/mnist', train=True) :
         if not len(set(labels)) == len(labels):
             raise RuntimeError("labels must not contain duplicates")
         
-        self.dataset = datasets.MNIST(root=root, download=True)
+        self.labels = labels
+        self.dataset = datasets.MNIST(root=root, download=True, train=train)
         self.transform = transform
         self.img_type = img_type
+        
         label_file_name = os.path.join(root, 'labels.pkl')
+        
+        if os.path.exists(label_file_name):
+            with open(label_file_name, "rb" ) as f:
+                self.label_dict = pickle.load(f)
+        else:
+            self.create_label_dict(label_file_name)
+
+        self.length = sum([len(self.label_dict[key]) for key in self.labels])
+
+    def create_label_dict(self, filename) :
+        print("Creating label dictionary...")
+        self.label_dict = {}
+        for it in range(10):
+            self.label_dict[it] = []
+        print("\r" + str(0) + '/' + str(self.dataset.__len__()), end='\r')
+        for idx in range(self.dataset.__len__()):
+            _, label = self.dataset.__getitem__(idx)
+            print("\r" + str(idx+1) + '/' + str(self.dataset.__len__()), end='\r')
+            self.label_dict[label] += [idx]
+            
+        with open(filename, "wb" ) as f:
+            pickle.dump(self.label_dict, f)
+        print("Label dictionary saved.")
 
     def __len__(self):
-        return len(self.dataset)
+        return self.length
+
+    def get_index(self, idx):
+        for key in self.labels:
+            listlen = len(self.label_dict[key])
+            if idx < listlen:
+                return self.label_dict[key][idx]
+            idx -= listlen
 
     def __getitem__(self, idx):
-        img, label = self.dataset[idx]
-        if self.img_type == 'edge':
+        idx2 = self.get_index(idx)
+        img, label = self.dataset[idx2]
+        if self.img_type != 'original':
             img_np = np.array(img)
-            edge_np = cv2.Canny(img_np,0,0)
+            if self.img_type == 'edge':
+                edge_np = cv2.Canny(img_np,0,0)
+            if self.img_type == 'diledge':
+                dilation = cv2.dilate(img_np, np.ones((3, 3), np.uint8), iterations=1)
+                edge_np = dilation - img
             img = Image.fromarray(edge_np)
         
         if self.transform:
