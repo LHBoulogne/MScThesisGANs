@@ -3,6 +3,7 @@ import os
 
 from data.coupled import *
 from data.mnist import *
+from data.usps import *
 from data.celeba import *
 
 from vis.visualizer import *
@@ -63,21 +64,39 @@ class GAN():
                                         transforms.Lambda(rescale)]),
                      root='../data/mnist/')
 
+    def get_usps_dataset(self, labels):
+        return USPS(labels, transform=transforms.Compose([
+                                        transforms.Scale((self.config.imsize,self.config.imsize)),
+                                        transforms.ToTensor(),
+                                        transforms.Lambda(rescale)]),
+                     root='../data/usps/')
+
+    def get_digit_dataset(self, labels, dataname) :
+        if dataname == 'USPS':
+            return self.get_usps_dataset(labels)
+        if dataname == 'MNIST':
+            return self.get_mnist_dataset(labels, 'original')
+        if dataname == 'MNISTEDGE':
+            return self.get_mnist_dataset(labels, 'diledge')
+        if dataname == 'MNISTCANNY':
+            return self.get_mnist_dataset(labels, 'edge')
+
     def get_dataset(self):
         if self.config.coupled: 
-            if self.config.dataname == "MNIST":
-                dataset1 = self.get_mnist_dataset(self.config.labels1, 'original')
-                dataset2 = self.get_mnist_dataset(self.config.labels2, 'edge')
-            elif self.config.dataname == "CelebA":
+            if self.config.dataname == "CelebA":
                 dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg, self.config.domainlabel, 1)
                 dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg, self.config.domainlabel, 0)
+            else:
+                dataset1 = self.get_digit_dataset(self.config.labels1, self.config.dataname)
+                dataset2 = self.get_digit_dataset(self.config.labels2, self.config.dataname2)
+            
             dataset = CoupledDataset(self.config, dataset1, dataset2)
 
         else :
-            if self.config.dataname == "MNIST":
-                dataset = self.get_mnist_dataset(self.config.labels1, 'original')
-            elif self.config.dataname == "CelebA":
+            if self.config.dataname == "CelebA":
                 dataset = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg)
+            else :
+                dataset = self.get_digit_dataset(self.config.labels1, self.config.dataname)
 
         return dataset
 

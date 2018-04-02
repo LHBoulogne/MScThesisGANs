@@ -50,6 +50,7 @@ def parse_args() :
 
     #### Dataset params ####
     parser.add_argument('--dataname', type=str, default="MNIST")
+    parser.add_argument('--dataname2', type=str, default=None)
     parser.add_argument('--cropsize', type=int, default=160)
     # Coupled
     parser.add_argument('--batches', type=int,  default=25000)
@@ -136,6 +137,12 @@ def parse_args() :
     if config.g_b2 is None:
         config.g_b2 = config.b2
 
+    if config.dataname2 is None:
+        if config.dataname == "CelebA":
+            config.dataname2 = "CelebA"
+        if config.dataname == "MNIST":
+            config.dataname2 = "MNISTCANNY"
+
     if config.labels1 == ["None"]:
         config.labels1 = []
     if config.labels2 == ["None"]:
@@ -145,9 +152,11 @@ def parse_args() :
     if config.labels2_neg == ["None"]:
         config.labels2_neg = []
 
-    if config.dataname == "MNIST":
+    if config.dataname != "CelebA":
         config.labels1 = [int(label) for label in config.labels1]
+    if config.dataname2 != "CelebA":
         config.labels2 = [int(label) for label in config.labels2]
+
     config.savefolder = os.path.join('../savedata/', config.savefolder)
     config.loadfolder = os.path.join('../savedata/', config.loadfolder)
     return config

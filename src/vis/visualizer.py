@@ -27,21 +27,21 @@ class Visualizer() :
         
         #init c if necessary
         if config.auxclas:
-            if config.dataname == "MNIST" or config.labeltype == "onehot":
+            if config.dataname == "CelebA" and config.labeltype == "bool":
+                c_len = 2
+                c = []
+                for n in range(c_len):
+                    binary = bin(n)[2:].zfill(1) #unnecessarry
+
+                    c += [[int(x) for x in binary]]
+                c = np.array(c, dtype=np.float32)
+                c = np.repeat(c, self.vis_noise_len, axis=0)
+                c_g_input = torch.from_numpy(c)
+            else:
                 c_len = config.categories
                 c = np.repeat(range(c_len), self.vis_noise_len)
                 c_tensor = torch.from_numpy(c)
                 c_g_input = to_one_hot(c_len, c_tensor)
-            elif config.dataname == "CelebA" and config.labeltype == "bool":
-                    c_len = 2
-                    c = []
-                    for n in range(c_len):
-                        binary = bin(n)[2:].zfill(1) #unnecessarry
-
-                        c += [[int(x) for x in binary]]
-                    c = np.array(c, dtype=np.float32)
-                    c = np.repeat(c, self.vis_noise_len, axis=0)
-                    c_g_input = torch.from_numpy(c)
                 
             z = z.repeat(c_len,1)
             self.x_dim = c_len
@@ -68,7 +68,7 @@ class Visualizer() :
     def save_img(self, save_name, output):
         img = self.output_to_img(output)
         
-        if self.config.dataname == "MNIST":
+        if self.config.imgch == 1:
             scipy.misc.toimage(img[0], cmin=-1, cmax=1).save(save_name)
         else:
             scipy.misc.toimage(img, cmin=-1, cmax=1, channel_axis=0).save(save_name)

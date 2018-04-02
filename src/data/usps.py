@@ -1,11 +1,10 @@
 #From https://github.com/mingyuliutw/CoGAN/tree/master/cogan_pytorch/src
 
-from __future__ import print_function
 from PIL import Image
 import cv2
 import os
 import numpy as np
-import cPickle
+import _pickle as pickle
 import gzip
 import torch.utils.data as data
 import torch
@@ -14,38 +13,62 @@ import urllib
 
 class USPS(data.Dataset):
     # Num of Train = 7438, Num ot Test 1860
-    def __init__(self, root, num_training_samples, train=True, transform=None, seed=None):
+    def __init__(self, labels, transform=None, root='../data/usps', train=True):
         self.filename = 'usps_28x28.pkl'
         self.train = train
         self.root = root
-        self.num_training_samples = num_training_samples
         self.transform = transform
         self.test_set_size = 0
-        # self.download()
-        self.train_data, self.train_labels = self.load_samples()
-        if seed is not None:
-            np.random.seed(seed)
-        if self.train:
-            total_num_samples = self.train_labels.shape[0]
-            indices = np.arange(total_num_samples)
-            np.random.shuffle(indices)
-            self.train_data = self.train_data[indices[0:self.num_training_samples], ::]
-            self.train_labels = self.train_labels[indices[0:self.num_training_samples]]
-        self.train_data *= 255.0
-        self.train_data = self.train_data.transpose((0, 2, 3, 1))  # convert to HWC
+        self.download()
+        self.labels = labels
+        self.img_data, self.img_labels = self.load_samples()
+        self.img_data *= 255.0
+        self.img_data = self.img_data.transpose((0, 2, 3, 1))  # convert to HWC
 
-    def __getitem__(self, index):
-        img, label = self.train_data[index, ::], self.train_labels[index]
+        label_file_name = os.path.join(root, str(train) + '_' + 'labels.pkl')
+        
+        if os.path.exists(label_file_name):
+            with open(label_file_name, "rb" ) as f:
+                self.label_dict = pickle.load(f)
+        else:
+            self.create_label_dict(label_file_name)
+
+        self.length = sum([len(self.label_dict[key]) for key in self.labels])
+
+    def create_label_dict(self, filename) :
+        print("Creating label dictionary...")
+        self.label_dict = {}
+        for it in range(10):
+            self.label_dict[it] = []
+        print("\r" + str(0) + '/' + str(len(self.img_data)), end='\r')
+        for idx in range(len(self.img_data)):
+            _, label = self.img_data[idx, ::], self.img_labels[idx]
+            print("\r" + str(idx+1) + '/' + str(len(self.img_data)), end='\r')
+            self.label_dict[label] += [idx]
+            
+        with open(filename, "wb" ) as f:
+            pickle.dump(self.label_dict, f)
+        print("Label dictionary saved.")
+
+    def get_index(self, idx):
+        for key in self.labels:
+            listlen = len(self.label_dict[key])
+            if idx < listlen:
+                return self.label_dict[key][idx]
+            idx -= listlen
+
+    def __getitem__(self, idx):
+        idx2 = self.get_index(idx)
+        img, label = self.img_data[idx2, ::], self.img_labels[idx2]
+        img = np.array(img).reshape((28,28)).astype(np.uint8)
+        img = Image.fromarray(img)
         if self.transform is not None:
             img = self.transform(img)
-        label = torch.LongTensor([np.int64(label)])
+        label = torch.LongTensor([int(label)])
         return img, label
 
     def __len__(self):
-        if self.train:
-            return self.num_training_samples
-        else:
-            return self.test_set_size
+        return self.length
 
     def download(self):
         filename = os.path.join(self.root, self.filename)
@@ -62,7 +85,7 @@ class USPS(data.Dataset):
     def load_samples(self):
         filename = os.path.join(self.root, self.filename)
         f = gzip.open(filename, 'rb')
-        data_set = cPickle.load(f)
+        data_set = pickle.load(f, encoding='latin1')
         f.close()
         if self.train:
             images = data_set[0][0]
