@@ -95,7 +95,7 @@ class GANTrainer():
         if self.config.use_generator:
             source_error = self.s_criterion(verdict.view(-1), y)
         else :
-            source_error = Variable(torch.FloatTensor([0]))
+            source_error = utils.cuda(Variable(torch.FloatTensor([0])))
 
         if self.config.auxclas: # add loss for class_criterion() prediction
             classification_error = self.c_criterion(class_probs, c.squeeze()) * self.config.c_error_weight
