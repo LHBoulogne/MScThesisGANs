@@ -105,8 +105,10 @@ class GAN():
         self.D.eval()
 
         trainer.save_error()
+        
         if self.config.visualize_training:
-            imgsaver.save_training_imgs(epoch, batch, self.G)
+            if self.config.use_generator:
+                imgsaver.save_training_imgs(epoch, batch, self.G)
             errorplot.save_error_plots(trainer.get_error_storage(), self.config)
         self.save()
 
@@ -145,7 +147,7 @@ class GAN():
                     steps_without_G_update += 1
                 #Allow for multiple updates of D with respect to G
                 
-                if steps_without_G_update >= self.config.k: 
+                if self.config.use_generator and steps_without_G_update >= self.config.k: 
                     steps_without_G_update = 0
                     for it in range(self.config.G_updates):
                         g_updated = False

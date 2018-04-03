@@ -92,7 +92,11 @@ class GANTrainer():
             (verdict, class_probs) = d_out
         else :
             verdict = d_out[0]
-        source_error = self.s_criterion(verdict.view(-1), y)
+        if self.config.use_generator:
+            source_error = self.s_criterion(verdict.view(-1), y)
+        else :
+            source_error = Variable(torch.FloatTensor([0]))
+
         if self.config.auxclas: # add loss for class_criterion() prediction
             classification_error = self.c_criterion(class_probs, c.squeeze()) * self.config.c_error_weight
             return (source_error, classification_error)
@@ -175,13 +179,18 @@ class GANTrainer():
 
         D.zero_grad()
 
+        if self.config.use_generator:
         # forward pass
           #for fake data  
-        g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, self.c_fake1, self.c_fake2)
-        
-        g_out = G(*g_inp)
-        d_inp_fake = self.detach(g_out) #makes sure that the backward pass will stop at generator output
-        
+            g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, self.c_fake1, self.c_fake2)
+            
+            g_out = G(*g_inp)
+            d_inp_fake = self.detach(g_out) #makes sure that the backward pass will stop at generator output
+            
+            d_out_fake = D(*d_inp_fake)
+
+
+
         d_inp_real = (self.x1_real,) 
         if self.config.coupled:
             d_inp_real += (self.x2_real,)
@@ -236,7 +245,6 @@ class GANTrainer():
 
         quit()"""
 
-        d_out_fake = D(*d_inp_fake)
         d_out_real = D(*d_inp_real)
         
         if self.config.algorithm == 'wgan_gp':
@@ -251,9 +259,11 @@ class GANTrainer():
 
             error_real, separate_errors_real = self.compute_error_GAN(d_out_real, self.y_real, self.c_real1, self.c_real2)
             error_real.backward()
-
-            error_fake, separate_errors_fake = self.compute_error_GAN(d_out_fake, self.y_fake, self.c_fake1, self.c_fake2)
-            error_fake.backward()
+            if self.config.use_generator:
+                error_fake, separate_errors_fake = self.compute_error_GAN(d_out_fake, self.y_fake, self.c_fake1, self.c_fake2)
+                error_fake.backward()
+            else:
+                separate_errors_fake = separate_errors_real
                         
             self.d_opt.step()
             self.error_storage.store_errors('discriminator', separate_errors_fake, separate_errors_real)
