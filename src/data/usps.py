@@ -25,7 +25,7 @@ class USPS(data.Dataset):
         self.img_data *= 255.0
         self.img_data = self.img_data.transpose((0, 2, 3, 1))  # convert to HWC
 
-        label_file_name = os.path.join(root, str(train) + '_' + 'labels.pkl')
+        label_file_name = os.path.join(root, 'labels_'+str(train)+'.pkl')
         
         if os.path.exists(label_file_name):
             with open(label_file_name, "rb" ) as f:

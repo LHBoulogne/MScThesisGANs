@@ -18,7 +18,7 @@ class MNIST(Dataset) :
         self.transform = transform
         self.img_type = img_type
         
-        label_file_name = os.path.join(root, 'labels.pkl')
+        label_file_name = os.path.join(root, 'labels_'+str(train)+'.pkl')
         
         if os.path.exists(label_file_name):
             with open(label_file_name, "rb" ) as f:
