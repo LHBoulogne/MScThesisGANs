@@ -15,7 +15,7 @@ import torchvision.transforms as transforms
 import utils
 import sys
 
-savename = argv[1]
+savename = sys.argv[1]
 
 def gradient_penalty(x, y, f):
     # interpolation
