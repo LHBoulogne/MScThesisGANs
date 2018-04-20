@@ -13,7 +13,9 @@ import torchvision
 import torchvision.datasets as dsets
 import torchvision.transforms as transforms
 import utils
+import sys
 
+savename = argv[1]
 
 def gradient_penalty(x, y, f):
     # interpolation
@@ -30,8 +32,8 @@ def gradient_penalty(x, y, f):
     return gp
 
 """ gpu """
-gpu_id = [2]
-utils.cuda_devices(gpu_id)
+# gpu_id = [2]
+# utils.cuda_devices(gpu_id)
 
 
 """ param """
@@ -79,7 +81,7 @@ g_optimizer = torch.optim.Adam(G.parameters(), lr=lr, betas=(0.5, 0.999))
 
 
 """ load checkpoint """
-ckpt_dir = './checkpoints/celeba_wgan_gp'
+ckpt_dir = './checkpoints/' + savename
 utils.mkdir(ckpt_dir)
 try:
     ckpt = utils.load_checkpoint(ckpt_dir)
@@ -94,7 +96,7 @@ except:
 
 
 """ run """
-writer = tensorboardX.SummaryWriter('./summaries/celeba_wgan_gp')
+writer = tensorboardX.SummaryWriter('./summaries/' + savename)
 
 z_sample = Variable(torch.randn(100, z_dim))
 z_sample = utils.cuda(z_sample)
@@ -152,7 +154,7 @@ for epoch in range(start_epoch, epochs):
             G.eval()
             f_imgs_sample = (G(z_sample).data + 1) / 2.0
 
-            save_dir = './sample_images_while_training/celeba_wgan_gp'
+            save_dir = './sample_images_while_training/'  + savename
             utils.mkdir(save_dir)
             torchvision.utils.save_image(f_imgs_sample, '%s/Epoch_(%d)_(%dof%d).jpg' % (save_dir, epoch, i + 1, len(data_loader)), nrow=10)
 
