@@ -110,6 +110,7 @@ for epoch in range(start_epoch, epochs):
         imgs = Variable(imgs)
         bs = imgs.size(0)
         z = Variable(torch.randn(bs, z_dim))
+        print(imgs, z)
         imgs, z = utils.cuda([imgs, z])
 
         f_imgs = G(z)
