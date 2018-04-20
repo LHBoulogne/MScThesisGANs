@@ -33,11 +33,10 @@ def grad_penalty(inp_real, inp_fake, D):
         x_wave = inp_fake[idx].data
 
         x_hat = e*x + (1-e)*x_wave
-        #x_hat = e*x_wave + (1-e)*x
 
         inp_hat += (utils.cuda(Variable(x_hat, requires_grad=True)),)
 
-    out_hat = (D(*inp_hat),)
+    out_hat = ((D(*inp_hat),),) # simulate src
 
     gps = ()
     for idx in range(len(out_hat)):
@@ -61,19 +60,6 @@ else:
     
 
 """ data """
-crop_size = 108
-re_size = 64
-offset_height = (218 - crop_size) // 2
-offset_width = (178 - crop_size) // 2
-crop = lambda x: x[:, offset_height:offset_height + crop_size, offset_width:offset_width + crop_size]
-
-transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Lambda(crop),
-     transforms.ToPILImage(),
-     transforms.Scale(size=(re_size, re_size), interpolation=Image.BICUBIC),
-     transforms.ToTensor(),
-     transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3)])
 
 celeba_data = CelebA_dataset(root='../data/celeba/',
               transform=transforms.Compose([transforms.CenterCrop(160),
