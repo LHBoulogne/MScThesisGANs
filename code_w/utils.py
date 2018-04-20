@@ -27,6 +27,7 @@ def cuda(xs):
             return xs.cuda()
         else:
             return [x.cuda() for x in xs]
+    return xs
 
 
 def save_checkpoint(state, save_path, is_best=False, max_keep=None):
