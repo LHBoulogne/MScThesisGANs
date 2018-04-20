@@ -104,61 +104,62 @@ z_sample = Variable(torch.randn(100, z_dim))
 z_sample = utils.cuda(z_sample)
 for epoch in range(start_epoch, epochs):
     for i, (imgs, _) in enumerate(data_loader):
-        # step
-        step = epoch * len(data_loader) + i + 1
+        if len(imgs) == batch_size:
+            # step
+            step = epoch * len(data_loader) + i + 1
 
-        # set train
-        G.train()
+            # set train
+            G.train()
 
-        # leafs
-        imgs = Variable(imgs)
-        bs = imgs.size(0)
-        z = Variable(torch.randn(bs, z_dim))
-        imgs, z = utils.cuda([imgs, z])
+            # leafs
+            imgs = Variable(imgs)
+            bs = imgs.size(0)
+            z = Variable(torch.randn(bs, z_dim))
+            imgs, z = utils.cuda([imgs, z])
 
-        f_imgs = G(z)
-
-        # train D
-        r_logit = D(imgs)
-        f_logit = D(f_imgs.detach())
-
-        wd = r_logit.mean() - f_logit.mean()  # Wasserstein-1 Distance
-        gp = grad_penalty((imgs,), (f_imgs,), D)[0]
-        d_loss = -wd + gp * 10.0
-
-        D.zero_grad()
-        d_loss.backward()
-        d_optimizer.step()
-
-        writer.add_scalar('D/wd', wd.data.cpu().numpy(), global_step=step)
-        writer.add_scalar('D/gp', gp.data.cpu().numpy(), global_step=step)
-
-        if step % n_critic == 0:
-            # train G
-            z = utils.cuda(Variable(torch.randn(bs, z_dim)))
             f_imgs = G(z)
-            f_logit = D(f_imgs)
-            g_loss = -f_logit.mean()
+
+            # train D
+            r_logit = D(imgs)
+            f_logit = D(f_imgs.detach())
+
+            wd = r_logit.mean() - f_logit.mean()  # Wasserstein-1 Distance
+            gp = grad_penalty((imgs,), (f_imgs,), D)[0]
+            d_loss = -wd + gp * 10.0
 
             D.zero_grad()
-            G.zero_grad()
-            g_loss.backward()
-            g_optimizer.step()
+            d_loss.backward()
+            d_optimizer.step()
 
-            writer.add_scalars('G',
-                               {"g_loss": g_loss.data.cpu().numpy()},
-                               global_step=step)
+            writer.add_scalar('D/wd', wd.data.cpu().numpy(), global_step=step)
+            writer.add_scalar('D/gp', gp.data.cpu().numpy(), global_step=step)
 
-        if (i + 1) % 1 == 0:
-            print("Epoch: (%3d) (%5d/%5d)" % (epoch, i + 1, len(data_loader)))
+            if step % n_critic == 0:
+                # train G
+                z = utils.cuda(Variable(torch.randn(bs, z_dim)))
+                f_imgs = G(z)
+                f_logit = D(f_imgs)
+                g_loss = -f_logit.mean()
 
-        if (i + 1) % 100 == 0:
-            G.eval()
-            f_imgs_sample = (G(z_sample).data + 1) / 2.0
+                D.zero_grad()
+                G.zero_grad()
+                g_loss.backward()
+                g_optimizer.step()
 
-            save_dir = './sample_images_while_training/'  + savename
-            utils.mkdir(save_dir)
-            torchvision.utils.save_image(f_imgs_sample, '%s/Epoch_(%d)_(%dof%d).jpg' % (save_dir, epoch, i + 1, len(data_loader)), nrow=10)
+                writer.add_scalars('G',
+                                   {"g_loss": g_loss.data.cpu().numpy()},
+                                   global_step=step)
+
+            if (i + 1) % 1 == 0:
+                print("Epoch: (%3d) (%5d/%5d)" % (epoch, i + 1, len(data_loader)))
+
+            if (i + 1) % 100 == 0:
+                G.eval()
+                f_imgs_sample = (G(z_sample).data + 1) / 2.0
+
+                save_dir = './sample_images_while_training/'  + savename
+                utils.mkdir(save_dir)
+                torchvision.utils.save_image(f_imgs_sample, '%s/Epoch_(%d)_(%dof%d).jpg' % (save_dir, epoch, i + 1, len(data_loader)), nrow=10)
 
     utils.save_checkpoint({'epoch': epoch + 1,
                            'D': D.state_dict(),
