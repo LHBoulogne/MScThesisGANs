@@ -59,7 +59,7 @@ transform = transforms.Compose(
 
 celeba_data = CelebA_dataset(root='../data/celeba/',
               transform=transforms.Compose([transforms.CenterCrop(160),
-                                            transforms.Scale((self.config.imsize,self.config.imsize)),
+                                            transforms.Scale((64,64)),
                                             transforms.ToTensor(),
                                             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]))
 
