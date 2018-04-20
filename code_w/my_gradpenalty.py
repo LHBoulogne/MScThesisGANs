@@ -15,21 +15,40 @@ import torchvision.transforms as transforms
 import utils
 import sys
 
+""" param """
+epochs = 50
+batch_size = 64
+n_critic = 5
+lr = 0.0002
+z_dim = 100
+feature_dim = 64
 savename = sys.argv[1]
 
-def gradient_penalty(x, y, f):
-    # interpolation
-    shape = [x.size(0)] + [1] * (x.dim() - 1)
-    alpha = utils.cuda(torch.rand(shape))
-    z = x + alpha * (y - x)
+def grad_penalty(inp_real, inp_fake, D):
+    inp_hat = ()
+    for idx in range(len(inp_fake)):
+        e = utils.cuda(torch.rand(batch_size, 1,1,1))
 
-    # gradient penalty
-    z = utils.cuda(Variable(z, requires_grad=True))
-    o = f(z)
-    g = grad(o, z, grad_outputs=utils.cuda(torch.ones(o.size())), create_graph=True)[0].view(z.size(0), -1)
-    gp = ((g.norm(p=2, dim=1) - 1)**2).mean()
+        x = inp_real[idx].data
+        x_wave = inp_fake[idx].data
 
-    return gp
+        x_hat = e*x + (1-e)*x_wave
+        #x_hat = e*x_wave + (1-e)*x
+
+        inp_hat += (utils.cuda(Variable(x_hat, requires_grad=True)),)
+
+    out_hat = (D(*inp_hat),)
+
+    gps = ()
+    for idx in range(len(out_hat)):
+        gradient = grad(out_hat[idx][0], inp_hat[idx],
+            grad_outputs = utils.cuda(torch.ones(out_hat[idx][0].size())), 
+            create_graph = True)[0]
+        gradient = gradient.view(batch_size, -1)
+        gp = ((gradient.norm(p=2, dim=1) - 1)**2).mean()
+        gps += (gp,)
+        
+    return gps
 
 """ gpu """
 # gpu_id = [2]
@@ -40,13 +59,6 @@ if not torch.cuda.is_available:
 else:
     print('CUDA not available. Training on CPU.')
     
-""" param """
-epochs = 50
-batch_size = 64
-n_critic = 5
-lr = 0.0002
-z_dim = 100
-
 
 """ data """
 crop_size = 108
@@ -76,8 +88,8 @@ data_loader = torch.utils.data.DataLoader(celeba_data,
 
 
 """ model """
-D = models_64x64.DiscriminatorWGANGP(3)
-G = models_64x64.Generator(z_dim)
+D = models_64x64.DiscriminatorWGANGP(3, dim=feature_dim)
+G = models_64x64.Generator(z_dim, dim=feature_dim)
 utils.cuda([D, G])
 
 d_optimizer = torch.optim.Adam(D.parameters(), lr=lr, betas=(0.5, 0.999))
@@ -125,7 +137,7 @@ for epoch in range(start_epoch, epochs):
         f_logit = D(f_imgs.detach())
 
         wd = r_logit.mean() - f_logit.mean()  # Wasserstein-1 Distance
-        gp = gradient_penalty(imgs.data, f_imgs.data, D)
+        gp = grad_penalty((imgs,), (f_imgs,), D)[0]
         d_loss = -wd + gp * 10.0
 
         D.zero_grad()
