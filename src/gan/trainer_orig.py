@@ -249,22 +249,8 @@ class GANTrainer():
         quit()"""
 
         d_out_real = D(*d_inp_real)
-
         
-
-        if self.config.algorithm == 'wgan_gp_test':
-            r_logit = d_out_real[0][0]
-            f_logit = d_out_fake[0][0]
-
-            wd = r_logit.mean() - f_logit.mean()  # Wasserstein-1 Distance
-            gp = self.grad_penalty(d_inp_real, d_inp_fake, D)[0]
-            d_loss = -wd + gp * 10.0
-
-            D.zero_grad()
-            d_loss.backward()
-            self.d_opt.step()
-            
-        elif self.config.algorithm == 'wgan_gp':
+        if self.config.algorithm == 'wgan_gp':
             error, separate_errors = self.compute_D_error_WGAN_gp(d_inp_real, d_inp_fake, d_out_real, d_out_fake, D)
             error.backward()
             
@@ -301,25 +287,14 @@ class GANTrainer():
         d_out = D(*g_out)
 
         # perform backward pass and update
-        if self.config.algorithm == 'wgan_gp_test':
-            f_logit = d_out_fake[0][0]
-            g_loss = -f_logit.mean()
-
-            D.zero_grad()
-            G.zero_grad()
-            g_loss.backward()
-        
-        elif self.config.algorithm == 'wgan_gp':
+        if self.config.algorithm == 'wgan_gp':
             error, separate_errors = self.compute_G_error_WGAN_gp(d_out)
-            sum(error).backward()
-        
         elif self.config.algorithm == 'default':
             error, separate_errors = self.compute_error_GAN(d_out, self.y_real, self.c_fake1, self.c_fake2)
-            sum(error).backward()
-        
         else :
             raise RuntimeError('Algorithm not implemented: ' + self.config.algorithm)
 
+        sum(error).backward()
         self.g_opt.step()
         self.error_storage.store_errors('generator', separate_errors)
         
