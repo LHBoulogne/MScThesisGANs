@@ -34,7 +34,7 @@ class Discriminator(nn.Module):
         h0 = self.pool0(conv0(inp))
         h1 = self.pool1(self.conv1(h0))
         h2 = self.prelu2(self.conv2(h1))
-        h3 = self.conv3(h2)
+        out = self.conv3(h2)
         if self.auxclas:
             out_c = self.conv3c(h2)
             return (out, out_c)
