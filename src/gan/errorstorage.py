@@ -54,9 +54,10 @@ class ErrorStorage():
         else:
             d['source'] += [self.savable(src_error)]
 
-        if model == 'D':
-            d['err1']['classification'] += [self.savable(src_error[0])]
-            d['err2']['classification'] += [self.savable(src_error[1])]
-        else:
-            self.error_dicts[idx][model]['classification'] += [self.savable(src_error)]
+        if self.config.auxclas:
+            if model == 'D':
+                d['err1']['classification'] += [self.savable(class_error[0])]
+                d['err2']['classification'] += [self.savable(class_error[1])]
+            else:
+                self.error_dicts[idx][model]['classification'] += [self.savable(src_error)]
             
