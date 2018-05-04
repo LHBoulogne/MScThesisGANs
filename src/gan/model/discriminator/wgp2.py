@@ -41,7 +41,7 @@ class Discriminator(nn.Module):
                     nn.Conv2d(config.d_dim * mult, config.categories[it], 4),
                     Reshape(-1, config.categories[it])
                     )
-        self.init_dummy = nn.Sequential(*self.predict_class) #to apply weight initialization
+            self.init_dummy = nn.Sequential(*self.predict_class) #to apply weight initialization
 
         weight_init(self, config.weight_init)
 

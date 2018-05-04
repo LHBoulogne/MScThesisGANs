@@ -37,7 +37,7 @@ class Discriminator(nn.Module):
             for it in range(self.numcats):
                 self.conv3c += (FeatureMaps2Vector(config.d_dim*50, config.categories[it], config.d_last_layer, kernel_size=1),)
 
-        self.init_dummy = nn.Sequential(*self.conv3c) #to apply weight initialization
+            self.init_dummy = nn.Sequential(*self.conv3c) #to apply weight initialization
         weight_init(self, config.weight_init)
 
     def single_forward(self, inp, conv0):
