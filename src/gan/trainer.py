@@ -26,6 +26,7 @@ class GANTrainer():
         self.y_real = Variable(torch.FloatTensor(config.mini_batch_size).fill_(self.prob_data_is_real))
         self.y_fake = Variable(torch.FloatTensor(config.mini_batch_size).fill_(0.0))
 
+        self.c_fakes = self.real_fakes = (None, None)
         self.z = Variable(torch.FloatTensor(config.mini_batch_size, config.z_len))
         
         #init misc
