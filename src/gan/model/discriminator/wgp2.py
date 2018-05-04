@@ -7,6 +7,10 @@ class Discriminator(nn.Module):
     def __init__(self, config):
         super(Discriminator, self).__init__() 
         self.auxclas = config.auxclas
+        clen = 0
+        if self.auxclas:
+            clen = sum(config.categories)
+            self.numcats = len(config.categories)
 
         self.first_a = self.first_layers(config)
         
@@ -17,7 +21,7 @@ class Discriminator(nn.Module):
         for it in range(config.blocks):
             mult = 2**it
             layers += (
-                nn.Conv2d(config.d_dim*mult,  config.d_dim*mult*2, 5, stride=2, padding=2),
+                nn.Conv2d(config.d_dim*mult,  config.d_dim*mult*2, 5, stride=2, padding=2, bias=False),
                 Norm2d(config.d_dim*mult*2, config.d_norm),
                 Activation(config.d_act)
                 )
@@ -31,10 +35,13 @@ class Discriminator(nn.Module):
         )
 
         if self.auxclas:
-            self.predict_class = nn.Sequential(
-                nn.Conv2d(dim * 8, config.categories, 4),
-                Reshape(-1, config.categories)
-                )
+            self.predict_class = []
+            for it in range(self.numcats):
+                self.predict_class += nn.Sequential(
+                    nn.Conv2d(config.d_dim * mult, config.categories[it], 4),
+                    Reshape(-1, config.categories[it])
+                    )
+        self.init_dummy = nn.Sequential(*self.predict_class) #to apply weight initialization
 
         weight_init(self, config.weight_init)
 
@@ -49,7 +56,9 @@ class Discriminator(nn.Module):
         hidden = self.main(hidden)
         s = self.predict_src(hidden)
         if self.auxclas:
-            c = self.predict_class(hidden)
+            c = ()
+            for it in range(self.numcats):
+                c += (self.predict_class[it](hidden),)
             return (s,c)
         return (s,)
 

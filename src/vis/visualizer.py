@@ -27,7 +27,7 @@ class Visualizer() :
         
         #init c if necessary
         if config.auxclas:
-            if config.dataname == "CelebA" and config.labeltype == "bool":
+            if config.dataname == "CelebA" and config.labeltype == "bool": #Todo: make up to date for multiple categories
                 c_len = 2
                 c = []
                 for n in range(c_len):
@@ -37,11 +37,18 @@ class Visualizer() :
                 c = np.array(c, dtype=np.float32)
                 c = np.repeat(c, self.vis_noise_len, axis=0)
                 c_g_input = torch.from_numpy(c)
-            else:
-                c_len = config.categories
-                c = np.repeat(range(c_len), self.vis_noise_len)
-                c_tensor = torch.from_numpy(c)
-                c_g_input = to_one_hot(c_len, c_tensor)
+            else: #is up do date:
+                c_len = 1
+                for cat in config.categories:
+                    c_len *= cat
+                c = torch.FloatTensor(range(config.categories[0])).unsqueeze(1)
+                for category in config.categories[1:]:
+                    new = np.repeat(range(category), len(c))
+                    new = torch.from_numpy(new).float().unsqueeze(1)
+                    c = torch.cat([c]*category, 0)
+                    c = torch.cat([c, new], 1)
+                c = torch.cat([c]*self.vis_noise_len, 0)
+                c_g_input = to_one_hot(config.categories, c)
                 
             z = z.repeat(c_len,1)
             self.x_dim = c_len

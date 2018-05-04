@@ -5,13 +5,18 @@ def rescale(t):
     return t
 
 def to_one_hot(categories, y):
-    if categories == 0 or categories is None:
+    if sum(categories) == 0 or categories is None:
         return []
 
     batch_size = len(y)
 
-    y = y.cpu().view(-1,1)
-    onehot = torch.FloatTensor(batch_size, categories)
-    torch.zeros(batch_size, categories, out=onehot)
-    onehot.scatter_(1, y, 1)
+    onehot = torch.FloatTensor(batch_size, sum(categories))
+    torch.zeros(batch_size, sum(categories), out=onehot)
+    y = y.long()
+    if len(y.size()) == 1:
+        y=y.unsqueeze(1)
+
+    for it in range(len(categories)):
+        idcs = y[:,it].unsqueeze(1) + sum(categories[:it])
+        onehot.scatter_(1, idcs, 1)
     return onehot

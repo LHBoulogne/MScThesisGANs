@@ -1,6 +1,7 @@
 
 import torch
 import torch.nn as nn
+from gan.model.helper.weight_init import *
 from gan.model.helper.layers import *
 # Augmented code from https://github.com/mingyuliutw/CoGAN/blob/master/cogan_pytorch/src/net_cogan_mnistedge.py
 
@@ -14,7 +15,7 @@ class Generator(nn.Module):
         self.auxclas = config.auxclas
         c_len = 0
         if config.auxclas:
-            c_len = config.categories
+            c_len = sum(config.categories)
 
         self.dconv0 = Vector2FeatureMaps(config.z_len+c_len, config.g_dim*8, mode=config.g_first_layer)
         self.bn0 = nn.BatchNorm2d(config.g_dim*8, affine=False)
@@ -31,6 +32,8 @@ class Generator(nn.Module):
         self.dconv4_a = nn.ConvTranspose2d(config.g_dim, 1, kernel_size=6, stride=1, padding=1)
         self.dconv4_b = nn.ConvTranspose2d(config.g_dim, 1, kernel_size=6, stride=1, padding=1)
         self.sig4 = nn.Tanh()
+        
+        weight_init(self, config.weight_init)
         
 
     def singleForward(self, z, c=None):        

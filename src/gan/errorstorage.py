@@ -5,8 +5,7 @@ import copy
 class ErrorStorage(): 
     def __init__(self, config):
         self.config = config
-        self.error_dicts = []
-        self.error_dicts += [{}]
+        self.error_dicts = [{}]
         if self.config.coupled:
             self.error_dicts += [{}]
         for error_dict in self.error_dicts:
@@ -17,22 +16,15 @@ class ErrorStorage():
         d['G']['source'] = []
         
         d['D'] = {}
-        if self.config.algorithm == 'default':
-            d['D']['real'] = {}
-            d['D']['fake'] = {}
-            d['D']['real']['source'] = []
-            d['D']['fake']['source'] = []
-        else:
-            d['D']['source'] = []
-        
+        d['D']['err1'] = {}
+        d['D']['err2'] = {}
+        d['D']['err1']['source'] = []
+        d['D']['err2']['source'] = []        
 
         if self.config.auxclas:
             d['G']['classification'] = []
-            if self.config.algorithm == 'default':
-                d['D']['real']['classification'] = []
-                d['D']['fake']['classification'] = []
-            else :
-                d['D']['classification'] = []
+            d['D']['err1']['classification'] = []
+            d['D']['err2']['classification'] = []
             
     def get_error_dicts(self):
         error_dicts = []
@@ -50,28 +42,21 @@ class ErrorStorage():
         with open(filename, 'rb') as f:
             self.self.error_dicts = pickle.load(f)
 
-    def store_errors2(self, error_list, errors):
-        keys = ['source', 'classification']
-        for it, error in enumerate(errors):
-            key = keys[it]
-            error_list[key] += [error.data.cpu().numpy()]
+    def savable(self, error):
+        return error.data.cpu().numpy()
 
-    def store_errors1(self, model, error_fake, error_real, d):
-        if model == 'generator':
-            error_list_fake = d['G']
-        if model == 'discriminator':
-            if self.config.algorithm == 'default':
-                error_list_fake = d['D']['fake']
-                error_list_real = d['D']['real']
-            else :
-                error_list_fake = d['D']
+    def store_errors(self, model, idx, src_error, class_error=None):
+        error_list_fake = self.error_dicts[idx][model]
+        d = self.error_dicts[idx][model]
+        if model == 'D':
+            d['err1']['source'] += [self.savable(src_error[0])]
+            d['err2']['source'] += [self.savable(src_error[1])]
+        else:
+            d['source'] += [self.savable(src_error)]
 
-        self.store_errors2(error_list_fake, error_fake)
-
-        if not error_real is None:
-            self.store_errors2(error_list_real, error_real)
-
-
-    def store_errors(self, model, error_fake, error_real=(None,None)):
-        for it in range(len(error_fake)):
-            self.store_errors1(model, error_fake[it], error_real[it], self.error_dicts[it])
+        if model == 'D':
+            d['err1']['classification'] += [self.savable(src_error[0])]
+            d['err2']['classification'] += [self.savable(src_error[1])]
+        else:
+            self.error_dicts[idx][model]['classification'] += [self.savable(src_error)]
+            

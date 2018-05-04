@@ -13,8 +13,8 @@ def prepared_error_dict(error_dict, config):
 
     if config.combine_sc:
         collapse_source_class(error_dict)
-    if config.algorithm == 'default' and config.k == 1 and  (config.combine_rf or config.combine_gd): 
-        dicts = [error_dict['D']['real'], error_dict['D']['fake']]
+    if config.k == 1 and  (config.combine_rf or config.combine_gd): 
+        dicts = [error_dict['D']['err1'], error_dict['D']['err2']]
         error_dict['D'] = combine_dicts(dicts)
     if config.k == 1 and config.combine_gd:
         dicts = [error_dict['D'], error_dict['G']]

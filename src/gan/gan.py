@@ -143,7 +143,7 @@ class GAN():
                 
                 if self.config.auxclas :
                     c_fake = sample_c(self.config, dataset)
-                trainer.next_step(data, c_fake) #! Using the SAME c_fake for generator and discriminator update!
+                trainer.next_step(data, c_fake) # Using the same c_fake for generator and discriminator update
 
                 if trainer.update_discriminator(self.G, self.D):
                     steps_without_G_update += 1

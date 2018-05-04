@@ -69,6 +69,7 @@ def parse_args() :
 
     #### Trainer params ####
     parser.add_argument('--algorithm', type=str, default='default')
+    parser.add_argument('--c_algorithm', type=str, default='default')
     parser.add_argument('--gp_coef', type=int, default=10)
 
     #### Model params ####
@@ -84,7 +85,7 @@ def parse_args() :
 
 
     # auxclass
-    parser.add_argument('--categories', type=int, default=10)
+    parser.add_argument('--categories', nargs='+', type=int, default=[10])
     parser.add_argument('--c_error_weight', type=float, default=1.0)
     
     # Generator

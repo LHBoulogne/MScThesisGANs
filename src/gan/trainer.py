@@ -27,9 +27,6 @@ class GANTrainer():
         self.y_fake = Variable(torch.FloatTensor(config.mini_batch_size).fill_(0.0))
 
         self.z = Variable(torch.FloatTensor(config.mini_batch_size, config.z_len))
-
-        # LongTensor with index for crossentropyloss function
-        self.c_real1 = self.c_fake1 = self.c_real2 = self.c_fake2 = None
         
         #init misc
         self.s_criterion = nn.BCELoss()
@@ -51,13 +48,12 @@ class GANTrainer():
     def next_step(self, data, c_fake_data=None): 
         c_fake_data = utils.cuda(c_fake_data)
         #put data into Variables
+
         if self.config.coupled:
             x1_data, x2_data, c1_data, c2_data = utils.cuda(data) #read out data tuple
             if self.config.auxclas:
-                self.c_real1 = Variable(c1_data)
-                self.c_real2 = Variable(c2_data)
-                self.c_fake1 = Variable(c_fake_data[0])
-                self.c_fake2 = Variable(c_fake_data[1])
+                self.c_reals = (Variable(c1_data), Variable(c2_data))
+                self.c_fakes = (Variable(c_fake_data[0]), Variable(c_fake_data[1]))
             self.x1_real = Variable(x1_data)
             self.x2_real = Variable(x2_data)
             
@@ -65,15 +61,13 @@ class GANTrainer():
             x1_data, c1_data = utils.cuda(data) #read out data tuple
             if self.config.auxclas:
                 #set c_real Variable to contain the class conditional vector as input
-                self.c_real1 = Variable(c1_data)
-                self.c_fake1 = Variable(c_fake_data)
+                self.c_reals = (Variable(c1_data),)
+                self.c_fakes = (Variable(c_fake_data),)
             self.x1_real = Variable(x1_data)
 
         self.this_batch_size = x1_data.size(0)
         if self.config.mini_batch_size != self.this_batch_size:
             print('batch size is off: ' + str(self.this_batch_size))
-
-
 
     def get_error_storage(self):
         return self.error_storage
@@ -90,202 +84,95 @@ class GANTrainer():
     def load_error(self):
         self.error_storage.load_error()
 
-    def compute_error_single_GAN(self, d_out, y, c):
-        if self.config.auxclas: #for conditional input
-            (verdict, class_probs) = d_out
-        else :
-            verdict = d_out[0]
-        if self.config.use_generator:
-            source_error = self.s_criterion(verdict.view(-1), y)
-        else :
-            source_error = utils.cuda(Variable(torch.FloatTensor([0])))
+    def src_error(self, d_out, y):
+        return self.s_criterion(d_out.view(-1), y)
 
-        if self.config.auxclas: # add loss for class_criterion() prediction
-            classification_error = self.c_criterion(class_probs, c.squeeze()) * self.config.c_error_weight
-            return (source_error, classification_error)
-
-        return (source_error,)
-
-    # returns a tuple containing:
-    #   1 The total error 
-    #   2 A tuple that contains all separate error. This tuple contains:
-    #     - Per gan:
-    #       - A tuple with the error on the source and 
-    #         for an auxclas gan the classification error
-    def compute_error_GAN(self, d_out, y, c1, c2):
-        if self.config.coupled:
-            separate_a = self.compute_error_single_GAN(d_out[0], y, c1)
-            separate_b = self.compute_error_single_GAN(d_out[1], y, c2)
-            total = sum(separate_a) + sum(separate_b)
-            return (total, (separate_a, separate_b))
-        separate = self.compute_error_single_GAN(d_out[0], y, c1)
-        total = sum(separate)
-        return (total, (separate,))
-
-    def grad_penalty(self, inp_real, inp_fake, D):
-        inp_hat = ()
-        for idx in range(len(inp_fake)):
-            e = utils.cuda(torch.rand(self.config.mini_batch_size, 1,1,1))
-
-            x = inp_real[idx].data
-            x_wave = inp_fake[idx].data
-
-            x_hat = e*x + (1-e)*x_wave
-            #x_hat = e*x_wave + (1-e)*x
-
-            inp_hat += (utils.cuda(Variable(x_hat, requires_grad=True)),)
-
-        out_hat = D(*inp_hat)
-
-        gps = ()
-        for idx in range(len(out_hat)):
-            gradient = grad(out_hat[idx][0], inp_hat[idx],
-                grad_outputs = utils.cuda(torch.ones(out_hat[idx][0].size())), 
-                create_graph = True)[0]
-            gradient = gradient.view(self.config.mini_batch_size, -1)
-            gp = ((gradient.norm(p=2, dim=1) - 1)**2).mean()
-            gps += (gp,)
-            
-        return gps
-
-
-    def compute_D_error_WGAN_gp(self, inp_real, inp_fake, out_real, out_fake, D):
-        gps = self.grad_penalty(inp_real, inp_fake, D)
-        separate_errors = ()
+    def class_error(self, d_out, c):
         error = 0
-        for idx in range(len(out_fake)):
-            err = out_fake[idx][0].mean() - out_real[idx][0].mean() + self.config.gp_coef*gps[idx]
-            separate_errors += (err,)
-            error += err
+        if len(c.size()) == 1:
+            c=c.unsqueeze(1)
+        for it in range(len(d_out)):
+            error += self.c_criterion(d_out[it].view(self.config.mini_batch_size,-1), c[:,it])
+        return error * self.config.c_error_weight
 
-        return error, separate_errors
+    def grad_penalty(self, inp_hat, out_hat):
+        gradient = grad(out_hat, inp_hat,
+            grad_outputs = utils.cuda(torch.ones(out_hat.size())), 
+            create_graph = True)[0]
+        gradient = gradient.view(self.config.mini_batch_size, -1)
+        gp = ((gradient.norm(p=2, dim=1) - 1)**2).mean()
+        
+        return gp
 
-    def compute_G_error_WGAN_gp(self, d_out):
-        separate_errors = ()
-        error = 0
-        for idx in range(len(d_out)):
-            err = -d_out[idx][0].mean()
-            separate_errors += (err,)
-            error += err
+    def WGAN_D_src_error(self, inp_real, inp_fake, inp_hat, out_real, out_fake, out_hat, D):
+        gp = self.grad_penalty(inp_hat, out_hat)
+        w1 = out_fake.mean() - out_real.mean() 
+        err = w1 = self.config.gp_coef*gp
+        return err, w1
 
-        return error, separate_errors
-    
+    def WGAN_G_src_error(self, d_out):
+        return -d_out[0].mean()
+
 
     def update_discriminator(self, G, D):
         if self.config.mini_batch_size != self.this_batch_size:
             return False
-
-        """
-        G.eval()
-        D.eval()
-        """
-
         D.zero_grad()
 
-        if self.config.use_generator:
-        # forward pass
-          #for fake data  
-            g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, self.c_fake1, self.c_fake2)
-            
-            g_out = G(*g_inp)
-            d_inp_fake = self.detach(g_out) #makes sure that the backward pass will stop at generator output
-            
-            d_out_fake = D(*d_inp_fake)
+        #get fake discriminator output
+        g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, *self.c_fakes)
+        g_out = G(*g_inp)
+        d_inp_fake_list = self.detach(g_out) #makes sure that the backward pass will stop at generator output
+        d_out_fake_list = D(*d_inp_fake_list)
 
-
-
-        d_inp_real = (self.x1_real,) 
+        #get real discriminator output
+        d_inp_real_list = (self.x1_real,) 
         if self.config.coupled:
-            d_inp_real += (self.x2_real,)
+            d_inp_real_list += (self.x2_real,)
+        d_out_real_list = D(*d_inp_real_list)
 
-        """
-        config = self.config
-        
-        self.vis_noise_len = config.vis_dim*config.vis_dim
-        if config.auxclas:
-            self.vis_noise_len = config.vis_dim
-        self.x_dim = config.vis_dim
-        self.y_dim = config.vis_dim
+        #if necessary, get discriminator output of linearly interpolated points beween fake and real input 
+        if self.config.algorithm == 'wgan_gp' or self.config.c_algorithm == 'wgan_gp':
+            d_inp_hat_list = ()
+            for idx in range(len(d_inp_fake_list)):
+                e = utils.cuda(torch.rand(self.config.mini_batch_size, 1,1,1))
+                x = d_inp_real_list[idx].data
+                x_wave = d_inp_fake_list[idx].data
+                x_hat = e*x + (1-e)*x_wave
+                d_inp_hat_list += (utils.cuda(Variable(x_hat, requires_grad=True)),)
+            d_out_hat_list = D(*d_inp_hat_list)
 
-        #init z
-        from gan.aux.sample import sample_z
-        z = torch.FloatTensor(self.vis_noise_len, config.z_len)
-        sample_z(config.z_distribution, z)
-        
-        #init c if necessary
-        if config.auxclas:
-            if config.dataname == "MNIST":
-                c_len = config.categories
-                c = np.repeat(range(c_len), self.vis_noise_len)
-                c_tensor = torch.from_numpy(c)
-                c_g_input = to_one_hot(c_len, c_tensor)
-            elif config.dataname == "CelebA":
-                c_len = 2**config.categories
-                c = []
-                for n in range(c_len):
-                    binary = bin(n)[2:].zfill(config.categories)
 
-                    c += [[int(x) for x in binary]]
-                c = np.array(c, dtype=np.float32)
-                c = np.repeat(c, self.vis_noise_len, axis=0)
-                c_g_input = torch.from_numpy(c)
+        for idx in range(len(d_out_real_list)):
+            d_out_real = d_out_real_list[idx]
+            d_inp_real = d_inp_real_list[idx]
+            d_out_fake = d_out_fake_list[idx]
+            d_inp_fake = d_inp_fake_list[idx]
+
+            if self.config.algorithm == 'default':
+                src_error_real = self.src_error(d_out_real[0], self.y_real)
+                src_error_fake = self.src_error(d_out_fake[0], self.y_fake)
+                src_error = (src_error_real, src_error_fake)
+            elif self.config.algorithm == 'wgan_gp':
+                error, w_dist = self.WGAN_D_src_error(d_inp_real[0], d_inp_fake[0], d_inp_hat_list[idx], d_out_real[0], d_out_fake[0], d_out_hat_list[idx][0], D)
+                src_error = (error, w_dist)
+            
+            error = sum(src_error)
+            if self.config.auxclas:
+                if self.config.c_algorithm == 'default':
+                    class_error_real = self.class_error(d_out_real[1], self.c_reals[idx])
+                    class_error_fake = self.class_error(d_out_fake[1], self.c_fakes[idx])
+                    class_error = (class_error_real, class_error_fake)
+                elif self.config.c_algorithm == 'wgan_gp':
+                    raise RuntimeError("c_algorithm wgan_gp: Not implemented")
+                error += sum(class_error)
                 
-            z = z.repeat(c_len,1)
-            self.x_dim = c_len
-            
-
-        #construct input
-        self.generator_input = (utils.cuda(Variable(z)),)
-        if config.auxclas:
-            self.generator_input += (utils.cuda(Variable(c_g_input)),)
-            if config.coupled:
-                self.generator_input += (utils.cuda(Variable(c_g_input)),)
-
-        g_out2 = G(*self.generator_input)
-        print("En nu komtie:")
-        print(self.generator_input[1], g_inp[1])
-        print(self.generator_input[2], g_inp[2])
-
-        quit()"""
-
-        d_out_real = D(*d_inp_real)
-
-        
-
-        if self.config.algorithm == 'wgan_gp_test':
-            r_logit = d_out_real[0][0]
-            f_logit = d_out_fake[0][0]
-
-            wd = r_logit.mean() - f_logit.mean()  # Wasserstein-1 Distance
-            gp = self.grad_penalty(d_inp_real, d_inp_fake, D)[0]
-            d_loss = -wd + gp * 10.0
-
-            D.zero_grad()
-            d_loss.backward()
-            self.d_opt.step()
-            
-        elif self.config.algorithm == 'wgan_gp':
-            error, separate_errors = self.compute_D_error_WGAN_gp(d_inp_real, d_inp_fake, d_out_real, d_out_fake, D)
-            error.backward()
-            
-            self.d_opt.step()
-            self.error_storage.store_errors('discriminator', separate_errors) #TODO
-
-        elif self.config.algorithm == 'default':
-            # perform backward pass and update
-
-            error_real, separate_errors_real = self.compute_error_GAN(d_out_real, self.y_real, self.c_real1, self.c_real2)
-            error_real.backward()
-            if self.config.use_generator:
-                error_fake, separate_errors_fake = self.compute_error_GAN(d_out_fake, self.y_fake, self.c_fake1, self.c_fake2)
-                error_fake.backward()
+                self.error_storage.store_errors('D', idx, src_error, class_error)
             else:
-                separate_errors_fake = separate_errors_real
-                        
-            self.d_opt.step()
-            self.error_storage.store_errors('discriminator', separate_errors_fake, separate_errors_real)
-        else :
-            raise RuntimeError('Algorithm not implemented: ' + self.config.algorithm)
+                self.error_storage.store_errors('D', idx, src_error)
+            
+            error.backward()
+        self.d_opt.step()
 
         return True
 
@@ -296,31 +183,32 @@ class GANTrainer():
         
         # forward pass
         G.zero_grad()
-        g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, self.c_fake1, self.c_fake2)
+        g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, *self.c_fakes)
         g_out = G(*g_inp)
-        d_out = D(*g_out)
+        d_out_list = D(*g_out)
 
         # perform backward pass and update
-        if self.config.algorithm == 'wgan_gp_test':
-            f_logit = d_out_fake[0][0]
-            g_loss = -f_logit.mean()
-
-            D.zero_grad()
-            G.zero_grad()
-            g_loss.backward()
+        for idx in range(len(d_out_list)):
+            d_out = d_out_list[idx]
+            
+            if self.config.algorithm == 'default':
+                src_error = self.src_error(d_out[0], self.y_real)
+            elif self.config.algorithm == 'wgan_gp':
+                src_error = self.WGAN_G_src_error(d_out[0])
+            
+            error = src_error
+            if self.config.auxclas:
+                if self.config.c_algorithm == 'default':
+                    class_error = self.class_error(d_out[1], self.c_reals[idx])
+                elif self.config.c_algorithm == 'wgan_gp':
+                    raise RuntimeError("c_algorithm wgan_gp: Not implemented")
+                error += class_error
+                
+                self.error_storage.store_errors('G', idx, src_error, class_error)
+            else:
+                self.error_storage.store_errors('G', idx, src_error)
+            error.backward()
         
-        elif self.config.algorithm == 'wgan_gp':
-            error, separate_errors = self.compute_G_error_WGAN_gp(d_out)
-            sum(error).backward()
-        
-        elif self.config.algorithm == 'default':
-            error, separate_errors = self.compute_error_GAN(d_out, self.y_real, self.c_fake1, self.c_fake2)
-            sum(error).backward()
-        
-        else :
-            raise RuntimeError('Algorithm not implemented: ' + self.config.algorithm)
-
         self.g_opt.step()
-        self.error_storage.store_errors('generator', separate_errors)
         
         return True

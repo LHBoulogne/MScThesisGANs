@@ -10,7 +10,7 @@ class Generator(nn.Module):
         self.coupled = config.coupled
         c_len = 0
         if config.auxclas:
-            c_len = config.categories
+            c_len = sum(config.categories)
 
         mult = 2**config.blocks
         first_fm_size = 4

@@ -55,9 +55,9 @@ class CelebA_dataset(torch.utils.data.Dataset):
         for it in range(batch_size):
             idx = np.random.randint(len(self))
             idx2 = self.valid_idcs[idx]
-            label = self.get_y(idx2)
+            label = self.get_y(idx2).unsqueeze(0)
             ys += [label]
-        return torch.cat(ys, 0).unsqueeze(1)
+        return torch.cat(ys, 0)
 
     def get_y(self, idx):
         return torch.LongTensor(self.labels[idx])
