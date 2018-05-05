@@ -51,6 +51,7 @@ def parse_args() :
     parser.add_argument('--auxclas', type=str2bool, default=True)
 
     #### Dataset params ####
+    parser.add_argument('--combined', type=str2bool, default=False)
     parser.add_argument('--dataname', type=str, default="MNIST")
     parser.add_argument('--dataname2', type=str, default=None)
     parser.add_argument('--cropsize', type=int, default=160)
