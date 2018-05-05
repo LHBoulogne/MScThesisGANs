@@ -51,7 +51,7 @@ class GAN():
         return CelebA_dataset(root='../data/celeba/', 
               labelnames=self.config.labelnames, pos_labels=pos_labels, neg_labels=neg_labels, 
               domain_label=domain_label, domain_val=domain_val,
-              transform=transforms.Compose([transforms.CenterCrop(160),
+              transform=transforms.Compose([transforms.CenterCrop(self.config.cropsize),
                                             transforms.Scale((self.config.imsize,self.config.imsize)),
                                             transforms.ToTensor(),
                                             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]),
