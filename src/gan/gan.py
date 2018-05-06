@@ -2,6 +2,7 @@ import sys
 import os
 
 from data.coupled import *
+from data.combined import *
 from data.mnist import *
 from data.usps import *
 from data.celeba import *
@@ -84,7 +85,9 @@ class GAN():
             return self.get_mnist_dataset(labels, 'edge')
 
     def get_dataset(self):
-        if self.config.coupled: 
+        if self.config.coupled and self.config.combined:
+            raise RuntimeError("invalid combination: coupled == True  and  combined == True")
+        if self.config.coupled or self.config.combined: 
             if self.config.dataname == "CelebA":
                 dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg, self.config.domainlabel, 1)
                 dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg, self.config.domainlabel, 0)
@@ -92,7 +95,10 @@ class GAN():
                 dataset1 = self.get_digit_dataset(self.config.labels1, self.config.dataname)
                 dataset2 = self.get_digit_dataset(self.config.labels2, self.config.dataname2)
             
-            dataset = CoupledDataset(self.config, dataset1, dataset2)
+            if self.config.coupled:
+                dataset = CoupledDataset(self.config, dataset1, dataset2)
+            else:
+                dataset = CombinedDataset(dataset1, dataset2)
 
         else :
             if self.config.dataname == "CelebA":

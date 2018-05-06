@@ -105,10 +105,10 @@ class GANTrainer():
         
         return gp
 
-    def WGAN_D_src_error(self, inp_real, inp_fake, inp_hat, out_real, out_fake, out_hat, D):
+    def WGAN_D_src_error(self, inp_real, inp_fake, inp_hat, out_real, out_fake, out_hat):
         gp = self.grad_penalty(inp_hat, out_hat)
         w1 = out_fake.mean() - out_real.mean() 
-        err = w1 = self.config.gp_coef*gp
+        err = w1 + self.config.gp_coef*gp
         return err, w1
 
     def WGAN_G_src_error(self, d_out):
@@ -155,7 +155,7 @@ class GANTrainer():
                 src_error_fake = self.src_error(d_out_fake[0], self.y_fake)
                 src_error = (src_error_real, src_error_fake)
             elif self.config.algorithm == 'wgan_gp':
-                error, w_dist = self.WGAN_D_src_error(d_inp_real[0], d_inp_fake[0], d_inp_hat_list[idx], d_out_real[0], d_out_fake[0], d_out_hat_list[idx][0], D)
+                error, w_dist = self.WGAN_D_src_error(d_inp_real, d_inp_fake, d_inp_hat_list[idx], d_out_real[0], d_out_fake[0], d_out_hat_list[idx][0])
                 src_error = (error, w_dist)
             
             error = sum(src_error)
