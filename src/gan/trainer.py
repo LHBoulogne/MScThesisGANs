@@ -192,7 +192,7 @@ class GANTrainer():
                 d_inp_hat_list += (utils.cuda(Variable(x_hat, requires_grad=True)),)
             d_out_hat_list = D(*d_inp_hat_list)
 
-        if algorithm == 'wgan_gp_old':
+        if self.config.algorithm == 'wgan_gp_old':
             src_error, _ = self.compute_D_error_WGAN_gp_old(d_inp_real_list, d_inp_fake_list, d_out_real_list, d_out_fake_list, D)
             src_error.backward()
             self.d_opt.step()
