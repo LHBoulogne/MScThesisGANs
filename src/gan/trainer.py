@@ -112,7 +112,7 @@ class GANTrainer():
         return err, w1
 
     def WGAN_G_src_error(self, d_out):
-        return -d_out[0].mean()
+        return -d_out.mean()
 
 
     def grad_penalty_old(self, inp_real, inp_fake, D):
