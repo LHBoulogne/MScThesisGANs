@@ -12,7 +12,7 @@ def to_one_hot(categories, y):
 
     onehot = torch.FloatTensor(batch_size, sum(categories))
     torch.zeros(batch_size, sum(categories), out=onehot)
-    y = y.long()
+    y = y.cpu().long()
     if len(y.size()) == 1:
         y=y.unsqueeze(1)
 
