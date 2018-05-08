@@ -37,21 +37,27 @@ class Visualizer() :
                 c = np.array(c, dtype=np.float32)
                 c = np.repeat(c, self.vis_noise_len, axis=0)
                 c_g_input = torch.from_numpy(c)
-            else: #is up do date:
+            else:
                 c_len = 1
                 for cat in config.categories:
                     c_len *= cat
-                c = torch.FloatTensor(range(config.categories[0])).unsqueeze(1)
+
+                category = config.categories[0]
+                c = np.repeat(range(category), self.vis_noise_len)
+                c = torch.from_numpy(c).float().unsqueeze(1)
+                print(c)
                 for category in config.categories[1:]:
                     new = np.repeat(range(category), len(c))
                     new = torch.from_numpy(new).float().unsqueeze(1)
+                    print(new)
                     c = torch.cat([c]*category, 0)
                     c = torch.cat([c, new], 1)
-                c = torch.cat([c]*self.vis_noise_len, 0)
+                print(c)
                 c_g_input = to_one_hot(config.categories, c)
-                
             z = z.repeat(c_len,1)
+            print(z[:,0])
             self.y_dim = c_len
+            quit()
             
 
         #construct input
