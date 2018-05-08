@@ -51,7 +51,7 @@ class Visualizer() :
                 c_g_input = to_one_hot(config.categories, c)
                 
             z = z.repeat(c_len,1)
-            self.x_dim = c_len
+            self.y_dim = c_len
             
 
         #construct input
