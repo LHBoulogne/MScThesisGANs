@@ -258,7 +258,7 @@ class GANTrainer():
                 error = src_error
                 if self.config.auxclas:
                     if self.config.c_algorithm == 'default':
-                        class_error = self.class_error(d_out[1], self.c_reals[idx])
+                        class_error = self.class_error(d_out[1], self.c_fakes[idx])
                     elif self.config.c_algorithm == 'wgan_gp':
                         raise RuntimeError("c_algorithm wgan_gp: Not implemented")
                     error += class_error
