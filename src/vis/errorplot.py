@@ -45,9 +45,10 @@ def save_error_plot(error_dict, config, nr=None):
     
     plt.xlabel('minibatch')
     plt.ylabel('loss')
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-           ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(os.path.join(config.savefolder, 'loss'+str(nr)+'.png'))
+    lgd = plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+                     ncol=2, mode="expand", borderaxespad=0.)
+    plt.savefig(os.path.join(config.savefolder, 'loss'+str(nr)+'.png'),
+                bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.close()
     
 def collapse_source_class(error_dict):
