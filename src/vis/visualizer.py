@@ -52,7 +52,7 @@ class Visualizer() :
                     c = torch.cat([c, new], 1)
                 c_g_input = to_one_hot(config.categories, c)
             z = z.repeat(c_len,1)
-            self.y_dim = c_len
+            self.x_dim = c_len
             
 
         #construct input
