@@ -26,7 +26,7 @@ def parse_args() :
     ##############################
     parser.add_argument('--visualize_training', type=str2bool, default=True)
     parser.add_argument('--snap_step', type=int, default=500)
-    parser.add_argument('--sloadworkers', type=int, default=3)
+    parser.add_argument('--dloadworkers', type=int, default=3)
     #### saving training images #####
     parser.add_argument('--vis_dim', type=int, default=6)
     #### plotting ####
