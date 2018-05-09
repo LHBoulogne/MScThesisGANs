@@ -128,7 +128,7 @@ class GAN():
     def train(self):
         dataset = self.get_dataset()
         dataloader = torch.utils.data.DataLoader(dataset, 
-            batch_size=self.config.mini_batch_size, shuffle=True, num_workers=3)
+            batch_size=self.config.mini_batch_size, shuffle=True, num_workers=self.config.dloadworkers)
 
         imgsaver = Visualizer(self.config)
         trainer = GANTrainer(self.config, self.G, self.D)
