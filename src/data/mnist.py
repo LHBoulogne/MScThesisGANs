@@ -9,10 +9,10 @@ import numpy as np
 from PIL import Image
 
 class MNIST(Dataset) :
-    def __init__(self, labels, img_type='original', transform=None, root='../../../data/mnist', train=True) :
+    def __init__(self, labels, img_type='original', transform=None, root='../../../data/mnist', train=True, domain_val=None) :
         if not len(set(labels)) == len(labels):
             raise RuntimeError("labels must not contain duplicates")
-        
+        self.domain_val = domain_val
         self.labels = labels
         self.dataset = datasets.MNIST(root=root, download=True, train=train)
         self.transform = transform
@@ -46,6 +46,26 @@ class MNIST(Dataset) :
     def __len__(self):
         return self.length
 
+    def get_random_labelbatch(self, batch_size):
+        np.random.seed()
+        ys = []
+        for it in range(batch_size):
+            label = self.random_label()
+            label = [label.unsqueeze(0)]
+            ys += label
+        return torch.cat(ys, 0)
+
+    def random_label(self):
+        idx = np.random.randint(len(self))
+        idx2 = self.get_index(idx)
+        _, label = self.dataset[idx2]
+        return self.complete_label(label)
+
+    def complete_label(self, label):
+        if self.domain_val is None:
+            return torch.LongTensor([label])
+        return torch.LongTensor([label, self.domain_val])
+
     def get_index(self, idx):
         for key in self.labels:
             listlen = len(self.label_dict[key])
@@ -67,5 +87,5 @@ class MNIST(Dataset) :
         
         if self.transform:
             img = self.transform(img)
-            
-        return img, label
+        
+        return img, self.complete_label(label)

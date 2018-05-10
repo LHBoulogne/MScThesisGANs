@@ -58,13 +58,14 @@ class GAN():
                                             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]),
               labeltype=self.config.labeltype)
 
-    def get_mnist_dataset(self, labels, img_type):
+    def get_mnist_dataset(self, labels, img_type, domain_val):
         return MNIST(labels, img_type, transform=transforms.Compose([
                                         transforms.Scale((self.config.imsize,self.config.imsize)),
                                         transforms.ToTensor(),
                                         transforms.Lambda(rescale)]),
                      root='../data/mnist/',
-                     train=self.config.train)
+                     train=self.config.train,
+                     domain_val=domain_val)
 
     def get_usps_dataset(self, labels):
         return USPS(labels, transform=transforms.Compose([
@@ -74,26 +75,29 @@ class GAN():
                      root='../data/usps/',
                      train=self.config.train)
 
-    def get_digit_dataset(self, labels, dataname) :
+    def get_digit_dataset(self, labels, dataname, domain_val=None) :
         if dataname == 'USPS':
+            if not domain_val is None:
+                print('domain_val for USPS not implemented yet')
+                return
             return self.get_usps_dataset(labels)
         if dataname == 'MNIST':
-            return self.get_mnist_dataset(labels, 'original')
+            return self.get_mnist_dataset(labels, 'original', domain_val)
         if dataname == 'MNISTEDGE':
-            return self.get_mnist_dataset(labels, 'diledge')
+            return self.get_mnist_dataset(labels, 'diledge', domain_val)
         if dataname == 'MNISTCANNY':
-            return self.get_mnist_dataset(labels, 'edge')
+            return self.get_mnist_dataset(labels, 'edge', domain_val)
 
     def get_dataset(self):
         if self.config.coupled and self.config.combined:
             raise RuntimeError("invalid combination: coupled == True  and  combined == True")
         if self.config.coupled or self.config.combined: 
             if self.config.dataname == "CelebA":
-                dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg, self.config.domainlabel, 1)
-                dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg, self.config.domainlabel, 0)
+                dataset1 = self.get_celeba_dataset(self.config.labels1, self.config.labels1_neg, self.config.domainlabel, 0)
+                dataset2 = self.get_celeba_dataset(self.config.labels2, self.config.labels2_neg, self.config.domainlabel, 1)
             else:
-                dataset1 = self.get_digit_dataset(self.config.labels1, self.config.dataname)
-                dataset2 = self.get_digit_dataset(self.config.labels2, self.config.dataname2)
+                dataset1 = self.get_digit_dataset(self.config.labels1, self.config.dataname, 0)
+                dataset2 = self.get_digit_dataset(self.config.labels2, self.config.dataname2,1)
             
             if self.config.coupled:
                 dataset = CoupledDataset(self.config, dataset1, dataset2)

@@ -16,22 +16,7 @@ def sample_z(z_distribution, z):
         raise RuntimeError('z_distribution argument has unknown value: ' + z_distribution)
 
 def sample_c(config, dataset):
-    if config.dataname == "CelebA":
-        return dataset.get_random_labelbatch(config.mini_batch_size)
-    return sample_multi_c(config)
-
-def sample_multi_c(config):
-    c1 = sample_multi_c_helper(config.mini_batch_size, config.labels1)
-    if config.coupled: 
-        c2 = sample_multi_c_helper(config.mini_batch_size, config.labels2)
-        return (c1, c2)
-    return c1
-
-def sample_multi_c_helper(batch_size, labels) :
-    idcs = np.random.randint(len(labels), size=(batch_size,))
-    rands = np.array([labels[i] for i in idcs])
-    rands = torch.from_numpy(rands)
-    return rands
+    return dataset.get_random_labelbatch(config.mini_batch_size)
 
 def sample_generator_input(config, this_batch_size, z, c_fake1=None, c_fake2=None):
     sample_z(config.z_distribution, z.data)
@@ -51,3 +36,25 @@ def sample_generator_input(config, this_batch_size, z, c_fake1=None, c_fake2=Non
                 c_fake2_inp = Variable(utils.cuda(c_fake2.data.float()))
                 g_inp += (c_fake2_inp,)
     return g_inp
+
+
+
+
+
+#def sample_c(config, dataset):
+#    if config.dataname == "CelebA":
+#        return dataset.get_random_labelbatch(config.mini_batch_size)
+#    return sample_multi_c(config)
+
+#def sample_multi_c(config):
+#    c1 = sample_multi_c_helper(config.mini_batch_size, config.labels1)
+#    if config.coupled: 
+#        c2 = sample_multi_c_helper(config.mini_batch_size, config.labels2)
+#        return (c1, c2)
+#    return c1
+
+#def sample_multi_c_helper(batch_size, labels) :
+#    idcs = np.random.randint(len(labels), size=(batch_size,))
+#    rands = np.array([labels[i] for i in idcs])
+#    rands = torch.from_numpy(rands)
+#    return rands
