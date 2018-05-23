@@ -17,6 +17,8 @@ def parse_args() :
 
     parser.add_argument('--savefolder', type=str, default='default')
     parser.add_argument('--loadfolder', type=str, default='default')
+    parser.add_argument('--load_epoch', type=int, default=0)
+
     parser.add_argument('--dloadworkers', type=int, default=3)
     parser.add_argument('--val_set_len', type=int, default=10000)
 

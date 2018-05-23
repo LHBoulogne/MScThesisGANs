@@ -55,6 +55,11 @@ class Classifier():
         torch.save(self.model.state_dict(), os.path.join(self.config.savefolder, 'classfier_' + str(epoch) + '.h5'))
         pass
 
+    def load_model(self) : 
+        self.get_model()
+        state = torch.load(os.path.join(self.config.loadfolder, 'classfier_' + str(self.config.load_epoch) + '.h5'), map_location=lambda storage, loc: storage)
+        self.model.load_state_dict(state)
+        
     def save_error_plot(self, train, val):
         x = range(len(train))
         plt.plot(x, train, label='training data')
@@ -72,6 +77,45 @@ class Classifier():
         test_set = self.get_dataset(train=False)
         test_loader = torch.utils.data.DataLoader(test_set, 
             batch_size=self.config.mini_batch_size, shuffle=True, num_workers=self.config.dloadworkers)
+
+        count = {}
+        correct = {}
+        for cat_idx, classes in enumerate(self.config.categories):
+            count[cat_idx] = np.zeros(classes)
+            correct[cat_idx] = np.zeros(classes)
+
+        print("Testing classifier", ':')
+        for batch, data in enumerate(test_loader):
+            if batch%classes == 0:
+                print('\r', '%.2f'%(100 * batch / len(test_loader)),'%', end='\r')
+
+            # get disc input
+            x, c = utils.cuda(data) #read out data tuple
+            out = self.model(Variable(x))
+
+            # get predictions
+            for cat_idx, classes in enumerate(self.config.categories):
+                cond = c[:,cat_idx]
+                prd = out[cat_idx].data
+                _, predicted = torch.max(prd, 1)
+
+                count[cat_idx] += [(cond == it).sum() for it in range(classes)]
+                for it in range(classes):
+                    idcs = (cond == it).nonzero().squeeze()
+                    if len(idcs>0) :
+                        correct[cat_idx][it] += (cond[idcs] == predicted[idcs]).sum() 
+
+        print("Accuracy:")
+        for cat_idx, classes in enumerate(self.config.categories):
+            print("Class nr" ,cat_idx, 'with', classes, 'categories:')
+            print('count:\t', count[cat_idx])
+            acc = [(100*correct[cat_idx][it]/count[cat_idx][it]) for it in range(classes)]
+            print('acc:\t', ['%.2f' % x for x in acc])
+            tot_count = count[cat_idx].sum()
+            tot_acc = sum([count[cat_idx][it]*acc[it] for it in range(classes)])/tot_count
+            print('Total:')
+            print('count:\t', tot_count)
+            print('acc:\t', '%.2f' % tot_acc, '\n')
 
     def train(self):
         self.get_model()
