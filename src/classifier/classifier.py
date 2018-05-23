@@ -114,7 +114,7 @@ class Classifier():
                 error = 0
                 for it in range(len(output)):
                     error += criterion(output[it].view(self.config.mini_batch_size,-1), labels[:,it])
-                train_errors[epoch] += [error.data.numpy()]
+                train_errors[epoch] += [error.data.cpu().numpy()]
                 error.backward()
                 opt.step()
             train_error += [np.mean(train_errors[epoch])]
