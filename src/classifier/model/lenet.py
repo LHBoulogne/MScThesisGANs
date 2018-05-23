@@ -32,6 +32,7 @@ class Classifier(nn.Module):
         self.fc2 = ()
         for it in range(self.numcats):
             self.fc2 += (nn.Linear(config.dim*50, config.categories[it]),)
+        self.dummy = nn.Sequential(*self.fc2) #bring these layers on GPU as well
 
     def forward(self, inp):
         h0 = self.relu(self.pool0(self.conv0(inp)))

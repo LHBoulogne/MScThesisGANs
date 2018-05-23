@@ -31,6 +31,7 @@ class Classifier(nn.Module):
         self.conv3 = ()
         for it in range(self.numcats):
             self.conv3 += (FeatureMaps2Vector(config.dim*50, config.categories[it], 'conv', kernel_size=1),)
+        self.dummy = nn.Sequential(*self.conv3) #bring these layers on GPU as well
 
     def forward(self, inp):
         h0 = self.pool0(self.conv0(inp))
