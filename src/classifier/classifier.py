@@ -138,7 +138,7 @@ class Classifier():
                 error = 0
                 for it in range(len(output)):
                     error += criterion(output[it].view(self.config.mini_batch_size,-1), labels[:,it])
-                val_error[epoch] += error.data.numpy()
+                val_error[epoch] += error.data.cpu().numpy()
 
             print(batch)
             val_error[epoch] /= batch
