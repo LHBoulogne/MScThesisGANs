@@ -7,5 +7,5 @@ if __name__ == "__main__":
     if config.train:
         classifier.train()
     else: # test
-        classifier.load()
+        classifier.load_model()
         classifier.test()
