@@ -20,6 +20,7 @@ def parse_args() :
     #### Saving and loading ####
     parser.add_argument('--savefolder', type=str, default='default')
     parser.add_argument('--loadfolder', type=str, default='default')
+    parser.add_argument('--load_epoch', type=int, default=None)
 
     ##############################
     #### Snapshot params ####

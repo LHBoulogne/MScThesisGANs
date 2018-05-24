@@ -1,5 +1,7 @@
 import sys
 import os
+import torch.nn.functional as F
+
 
 from data.coupled import *
 from data.combined import *
@@ -38,13 +40,19 @@ class GAN():
         self.D = mod.Discriminator(self.config)
         utils.cuda(self.D)
     
-    def save(self):
-        torch.save(self.G.state_dict(), os.path.join(self.config.savefolder, 'generator.h5'))
-        torch.save(self.D.state_dict(), os.path.join(self.config.savefolder, 'discriminator.h5'))
+    def save(self, epoch=None):
+        epstr = ''
+        if not epoch is None:
+            epstr = str(epoch) + '_'
+        torch.save(self.G.state_dict(), os.path.join(self.config.savefolder, epstr + 'generator.h5'))
+        torch.save(self.D.state_dict(), os.path.join(self.config.savefolder, epstr + 'discriminator.h5'))
 
-    def load(self) : #TODO: Make functionality that you can directly load a GAN because the config is also saved
-        gstate = torch.load(os.path.join(self.config.loadfolder, 'generator.h5'), map_location=lambda storage, loc: storage)
-        dstate = torch.load(os.path.join(self.config.loadfolder, 'discriminator.h5'), map_location=lambda storage, loc: storage)
+    def load(self):
+        epstr = ''
+        if not self.config.load_epoch is None:
+            epstr = str(self.config.load_epoch) + '_'
+        gstate = torch.load(os.path.join(self.config.loadfolder, epstr+'generator.h5'), map_location=lambda storage, loc: storage)
+        dstate = torch.load(os.path.join(self.config.loadfolder, epstr+'discriminator.h5'), map_location=lambda storage, loc: storage)
         self.G.load_state_dict(gstate)
         self.D.load_state_dict(dstate)
     
@@ -167,6 +175,7 @@ class GAN():
                             g_updated = trainer.update_generator(self.G, self.D)
 
             self.make_snapshot(epoch, batch+1, trainer, imgsaver)
+            self.save(epoch)
             epoch += 1
 
     #Only works for digits now
@@ -174,9 +183,12 @@ class GAN():
         dataloader = torch.utils.data.DataLoader(dataset, 
             batch_size=self.config.mini_batch_size, shuffle=True, num_workers=3)
 
-        classes = 10
-        count = np.zeros(classes)
-        correct = np.zeros(classes)
+        count = {}
+        correct = {}
+        for cat_idx, classes in enumerate(self.config.categories):
+            count[cat_idx] = np.zeros(classes)
+            correct[cat_idx] = np.zeros(classes)
+
         print("Testing auxiliary classifier", num, ':')
         for batch, data in enumerate(dataloader):
             if batch%classes == 0:
@@ -187,24 +199,28 @@ class GAN():
             out = eval_d(Variable(x))
 
             # get predictions
-            prd = out[0][1].data
-            _, predicted = torch.max(prd, 1)
+            for cat_idx, classes in enumerate(self.config.categories):
+                cond = c[:,cat_idx]
+                prd = out[0][1][cat_idx].data
+                _, predicted = torch.max(prd, 1)
 
-            count += [(c == it).sum() for it in range(classes)]
-            for it in range(classes):
-                idcs = (c == it).nonzero().squeeze()
-                if len(idcs>0) :
-                    correct[it] += (c[idcs] == predicted[idcs]).sum() 
+                count[cat_idx] += [(cond == it).sum() for it in range(classes)]
+                for it in range(classes):
+                    idcs = (cond == it).nonzero().squeeze()
+                    if len(idcs>0) :
+                        correct[cat_idx][it] += (cond[idcs] == predicted[idcs]).sum() 
 
         print("Accuracy for dataset",num, ':')
-        print('count:\t', count)
-        acc = [(100*correct[it]/count[it]) for it in range(classes)]
-        print('acc:\t', ['%.2f' % x for x in acc])
-        tot_count = count.sum()
-        tot_acc = sum([count[it]*acc[it] for it in range(classes)])/tot_count
-        print('Total:')
-        print('count:\t', tot_count)
-        print('acc:\t', '%.2f' % tot_acc, '\n')
+        for cat_idx, classes in enumerate(self.config.categories):
+            print("Class nr" ,cat_idx, 'with', classes, 'categories:')
+            print('count:\t', count[cat_idx])
+            acc = [(100*correct[cat_idx][it]/count[cat_idx][it]) for it in range(classes)]
+            print('acc:\t', ['%.2f' % x for x in acc])
+            tot_count = count[cat_idx].sum()
+            tot_acc = sum([count[cat_idx][it]*acc[it] for it in range(classes)])/tot_count
+            print('Total:')
+            print('count:\t', tot_count)
+            print('acc:\t', '%.2f' % tot_acc, '\n')
 
     def test(self):
         self.G.eval()

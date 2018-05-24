@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 class MNIST(Dataset) :
-    def __init__(self, labels, img_type='original', transform=None, root='../../../data/mnist', train=True, domain_val=None) :
+    def __init__(self, labels, img_type='original', transform=None, root='../../../data/mnist', train=True, domain_val=None):
         if not len(set(labels)) == len(labels):
             raise RuntimeError("labels must not contain duplicates")
         self.domain_val = domain_val

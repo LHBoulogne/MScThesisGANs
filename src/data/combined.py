@@ -11,6 +11,7 @@ class CombinedDataset(Dataset) :
     def __len__(self):
         return self.length
 
+    
     def get_random_labelbatch(self, batchsize):
         n = np.random.randint(self.length)
         if n < len(self.dataset1):
