@@ -52,7 +52,8 @@ class Visualizer() :
                     c = torch.cat([c, new], 1)
                 c_g_input = to_one_hot(config.categories, c)
             z = z.repeat(c_len,1)
-            self.x_dim = c_len
+            #old self.x_dim = c_len
+            self.y_dim = c_len
             
 
         #construct input
@@ -63,6 +64,17 @@ class Visualizer() :
                 self.generator_input += (utils.cuda(Variable(c_g_input)),)
 
     def output_to_img(self, output):
+        x = output.shape[2]
+        y = output.shape[3]
+        image = np.empty((self.config.imgch, self.x_dim*x, self.y_dim*y))
+        for ity in range(self.y_dim):
+            for itx in range(self.x_dim):
+                xstart = itx*x
+                ystart = ity*y
+                image[:, xstart:xstart+x  ,ystart:ystart+y] = output[itx+self.x_dim*ity]
+        return image
+
+    def output_to_img_old(self, output):
         x = output.shape[2]
         y = output.shape[3]
         image = np.empty((self.config.imgch, self.x_dim*x, self.y_dim*y))
