@@ -9,7 +9,7 @@ from torch.autograd import grad
 
 import numpy as np
 
-from gan.auxiliary.aux import to_one_hot
+from gan.auxiliary.auxiliary import to_one_hot
 from gan.auxiliary.sample import sample_generator_input
 from gan.errorstorage import *
 import utils

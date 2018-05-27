@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-from gan.auxiliary.aux import to_one_hot
+from gan.auxiliary.auxiliary import to_one_hot
 
 import utils
 

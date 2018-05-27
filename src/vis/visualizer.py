@@ -7,7 +7,7 @@ import torch
 from torch.autograd import Variable
 
 from gan.auxiliary.sample import sample_z
-from gan.auxiliary.aux import to_one_hot
+from gan.auxiliary.auxiliary import to_one_hot
 
 import utils
 

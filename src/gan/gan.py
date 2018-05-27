@@ -13,7 +13,7 @@ from vis.visualizer import *
 from vis import errorplot
 
 from gan.trainer import *
-from gan.auxiliary.aux import rescale
+from gan.auxiliary.auxiliary import rescale
 import utils
 
 from gan.auxiliary.sample import sample_c
