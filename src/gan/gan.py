@@ -206,8 +206,10 @@ class GAN():
 
                 count[cat_idx] += [(cond == it).sum() for it in range(classes)]
                 for it in range(classes):
-                    idcs = (cond == it).nonzero().squeeze()
-                    if len(idcs>0) :
+                    idcs = (cond == it).nonzero()
+                    if len(idcs) != 1: 
+                        idcs = idcs.squeeze()
+                    if len(idcs)>0:
                         correct[cat_idx][it] += (cond[idcs] == predicted[idcs]).sum() 
 
         print("Accuracy for dataset",num, ':')

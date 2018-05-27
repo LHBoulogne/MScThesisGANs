@@ -23,11 +23,11 @@ class GANTrainer():
         if config.labelsmoothing :
             self.prob_data_is_real = 0.9
         
-        self.y_real = Variable(torch.FloatTensor(config.mini_batch_size).fill_(self.prob_data_is_real))
-        self.y_fake = Variable(torch.FloatTensor(config.mini_batch_size).fill_(0.0))
+        self.y_real = utils.cuda(Variable(torch.FloatTensor(config.mini_batch_size).fill_(self.prob_data_is_real)))
+        self.y_fake = utils.cuda(Variable(torch.FloatTensor(config.mini_batch_size).fill_(0.0)))
 
         self.c_fakes = self.real_fakes = (None, None)
-        self.z = Variable(torch.FloatTensor(config.mini_batch_size, config.z_len))
+        self.z = utils.cuda(Variable(torch.FloatTensor(config.mini_batch_size, config.z_len)))
         
         #init misc
         self.s_criterion = nn.BCELoss()
@@ -42,7 +42,6 @@ class GANTrainer():
         
     def cuda(self):
         variables = [attr for attr in self.__dict__.keys() if type(self.__dict__[attr]) == Variable]
-
         for v in variables:
             self.__dict__[v] = utils.cuda(self.__dict__[v])
 
@@ -169,7 +168,6 @@ class GANTrainer():
         if self.config.mini_batch_size != self.this_batch_size:
             return False
         D.zero_grad()
-
         #get fake discriminator output
         g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, *self.c_fakes)
         g_out = G(*g_inp)

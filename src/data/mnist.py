@@ -37,7 +37,7 @@ class MNIST(Dataset) :
         for idx in range(self.dataset.__len__()):
             _, label = self.dataset.__getitem__(idx)
             print("\r" + str(idx+1) + '/' + str(self.dataset.__len__()), end='\r')
-            self.label_dict[label] += [idx]
+            self.label_dict[int(label)] += [idx]
             
         with open(filename, "wb" ) as f:
             pickle.dump(self.label_dict, f)
