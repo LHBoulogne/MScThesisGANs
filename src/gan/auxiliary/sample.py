@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-from gan.aux.aux import to_one_hot
+from gan.auxiliary.aux import to_one_hot
 
 import utils
 
@@ -21,7 +21,7 @@ def sample_c(config, dataset):
 def sample_generator_input(config, this_batch_size, z, c_fake1=None, c_fake2=None):
     sample_z(config.z_distribution, z.data)
     g_inp = (z,)
-    if config.auxclas: #for conditional input
+    if config.auxclas or config.conditional: #for conditional input
         if config.dataname != "CelebA" or config.labeltype == 'onehot':
             c_fake_one_hot1 = Variable(utils.cuda(to_one_hot(config.categories, c_fake1.data)))
             g_inp += (c_fake_one_hot1,) 

@@ -6,10 +6,10 @@ from gan.model.helper.layers import *
 class Generator(nn.Module):
     def __init__(self, config):
         super(Generator, self).__init__()
-        self.auxclas = config.auxclas
+        self.conditional = config.auxclas or config.conditional
         self.coupled = config.coupled
         c_len = 0
-        if config.auxclas:
+        if self.conditional:
             c_len = sum(config.categories)
 
         mult = 2**config.blocks
@@ -46,7 +46,7 @@ class Generator(nn.Module):
         return last
 
     def forward(self, z, c_a=None, c_b=None): #for accogans and cogans
-        if self.auxclas:
+        if self.conditional:
             inp_a = torch.cat((z, c_a), 1)
             if self.coupled:
                 inp_b = torch.cat((z, c_b), 1)

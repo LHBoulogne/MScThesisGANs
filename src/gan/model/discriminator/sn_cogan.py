@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from gan.model.helper.weight_init import *
 from gan.model.helper.layers import *
+from gan.model.helper.spectralnorm import *
 # Augmented code from https://github.com/mingyuliutw/CoGAN/blob/master/cogan_pytorch/src/net_cogan_mnistedge.py
 
 # Discriminator Model
@@ -13,30 +14,37 @@ class Discriminator(nn.Module):
     def __init__(self, config):
         super(Discriminator, self).__init__()
         self.auxclas = config.auxclas
-        self.wasserstein = config.algorithm == 'wgan_gp'
+        self.wasserstein = config.algorithm != 'wgan_gp'
         clen = 0
         if self.auxclas:
             self.numcats = len(config.categories)
 
-        self.conv0_a = nn.Conv2d(1, config.d_dim*2, kernel_size=5, stride=1, padding=0)
-        self.conv0_b = nn.Conv2d(1, config.d_dim*2, kernel_size=5, stride=1, padding=0)
+        self.conv0_a = SpectralNorm(nn.Conv2d(1, config.d_dim*2, kernel_size=5, stride=1, padding=0))
+        self.conv0_b = SpectralNorm(nn.Conv2d(1, config.d_dim*2, kernel_size=5, stride=1, padding=0))
         #24x24
         self.pool0 = nn.MaxPool2d(kernel_size=2)
         #12x12
-        self.conv1 = nn.Conv2d(config.d_dim*2, config.d_dim*5, kernel_size=5, stride=1, padding=0)
+        self.conv1 = SpectralNorm(nn.Conv2d(config.d_dim*2, config.d_dim*5, kernel_size=5, stride=1, padding=0))
         #8x8
         self.pool1 = nn.MaxPool2d(kernel_size=2)
         #4x4
-        self.conv2 = nn.Conv2d(config.d_dim*5, config.d_dim*50, kernel_size=4, stride=1, padding=0)
+        self.conv2 = SpectralNorm(nn.Conv2d(config.d_dim*5, config.d_dim*50, kernel_size=4, stride=1, padding=0))
         #1x1
         self.prelu2 = nn.PReLU()
-        self.conv3 = FeatureMaps2Vector(config.d_dim*50, 1, config.d_last_layer, kernel_size=1)
-        if not self.wasserstein:
+        self.conv3 = nn.Sequential(
+                SpectralNorm(nn.Conv2d(config.d_dim*50, 1, 1, stride=1, padding=0)),
+                Reshape(-1, 1)
+                )
+        if self.wasserstein:
             self.sigm = nn.Sigmoid()
         if self.auxclas:
             self.conv3c = ()
             for it in range(self.numcats):
-                self.conv3c += (FeatureMaps2Vector(config.d_dim*50, config.categories[it], config.d_last_layer, kernel_size=1),)
+                self.conv3c += (nn.Sequential(
+                                    SpectralNorm(nn.Conv2d(config.d_dim*50, config.categories[it], 1, stride=1, padding=0)),
+                                    Reshape(-1, config.categories[it])
+                                    ),
+                )
 
             self.init_dummy = nn.Sequential(*self.conv3c) #to apply weight initialization
         weight_init(self, config.weight_init)
@@ -46,7 +54,7 @@ class Discriminator(nn.Module):
         h1 = self.pool1(self.conv1(h0))
         h2 = self.prelu2(self.conv2(h1))
         out = self.conv3(h2)
-        if not self.wasserstein:
+        if self.wasserstein:
             out = self.sigm(out)
         if self.auxclas:
             out_c = ()

@@ -51,6 +51,7 @@ def parse_args() :
     #### GAN type ####
     parser.add_argument('--coupled', type=str2bool, default=True)
     parser.add_argument('--auxclas', type=str2bool, default=True)
+    parser.add_argument('--conditional', type=str2bool, default=False)
 
     #### Dataset params ####
     parser.add_argument('--combined', type=str2bool, default=False)

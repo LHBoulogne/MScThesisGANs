@@ -9,8 +9,8 @@ from torch.autograd import grad
 
 import numpy as np
 
-from gan.aux.aux import to_one_hot
-from gan.aux.sample import sample_generator_input
+from gan.auxiliary.aux import to_one_hot
+from gan.auxiliary.sample import sample_generator_input
 from gan.errorstorage import *
 import utils
     
@@ -35,7 +35,8 @@ class GANTrainer():
         self.c_criterion = nn.CrossEntropyLoss() #Includes the softmax function        
 
         self.g_opt = optim.Adam(G.parameters(), lr=config.g_lr, betas=(config.g_b1, config.g_b2), weight_decay=config.g_weight_decay)
-        self.d_opt = optim.Adam(D.parameters(), lr=config.d_lr, betas=(config.d_b1, config.d_b2), weight_decay=config.d_weight_decay)
+        self.d_opt = optim.Adam(filter(lambda p: p.requires_grad, D.parameters()),
+            lr=config.d_lr, betas=(config.d_b1, config.d_b2), weight_decay=config.d_weight_decay)
         
         self.cuda()
         

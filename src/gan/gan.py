@@ -13,10 +13,10 @@ from vis.visualizer import *
 from vis import errorplot
 
 from gan.trainer import *
-from gan.aux.aux import rescale
+from gan.auxiliary.aux import rescale
 import utils
 
-from gan.aux.sample import sample_c
+from gan.auxiliary.sample import sample_c
 
 class GAN():
     def __init__(self, config):
