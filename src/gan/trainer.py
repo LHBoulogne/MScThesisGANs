@@ -168,6 +168,7 @@ class GANTrainer():
         if self.config.mini_batch_size != self.this_batch_size:
             return False
         D.zero_grad()
+
         #get fake discriminator output
         g_inp = sample_generator_input(self.config, self.config.mini_batch_size, self.z, *self.c_fakes)
         g_out = G(*g_inp)
@@ -206,11 +207,14 @@ class GANTrainer():
                     src_error_real = self.src_error(d_out_real[0], self.y_real)
                     src_error_fake = self.src_error(d_out_fake[0], self.y_fake)
                     src_error = (src_error_real, src_error_fake)
+                    error = sum(src_error)
                 elif self.config.algorithm == 'wgan_gp':
                     error, w_dist = self.WGAN_D_src_error(d_inp_real, d_inp_fake, d_inp_hat_list[idx], d_out_real[0], d_out_fake[0], d_out_hat_list[idx][0])
                     src_error = (error, w_dist)
+                elif self.config.algorithm == 'wgan':
+                    error = d_out_fake[0].mean() - d_out_real[0].mean()
+                    src_error = (error, error)
                 
-                error = sum(src_error)
                 if self.config.auxclas:
                     if self.config.c_algorithm == 'default':
                         class_error_real = self.class_error(d_out_real[1], self.c_reals[idx])
@@ -251,7 +255,7 @@ class GANTrainer():
                 
                 if self.config.algorithm == 'default':
                     src_error = self.src_error(d_out[0], self.y_real)
-                elif self.config.algorithm == 'wgan_gp':
+                elif self.config.algorithm == 'wgan_gp' or self.config.algorithm == 'wgan':
                     src_error = self.WGAN_G_src_error(d_out[0])
                 
                 error = src_error
